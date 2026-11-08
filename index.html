@@ -29,6 +29,13 @@
       border-color: #e53e3e !important;
       box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.2);
     }
+    /* Color violeta corporativo para el botón de Agregar Compra */
+    .btn-violeta {
+      background-color: #805AD5;
+    }
+    .btn-violeta:hover {
+      background-color: #6B46C1;
+    }
   </style>
 </head>
 <body class="min-h-screen pb-12">
@@ -57,7 +64,7 @@
       </div>
 
       <div class="flex items-center gap-2 flex-wrap">
-        <button onclick="abrirModalCompraGeneral()" class="bg-rose-700 hover:bg-rose-800 text-white px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+        <button onclick="abrirModalCompraGeneral()" class="btn-violeta text-white px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-md">
           <i class="fas fa-plus-circle"></i> Agregar Compra
         </button>
         <button onclick="irInicio()" class="bg-stone-700 hover:bg-stone-600 text-white px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
@@ -80,21 +87,26 @@
       <h2 class="text-xl font-bold text-white mb-2"><i class="fas fa-chart-pie text-amber-400 mr-2"></i> Balance Global del Negocio</h2>
       <p class="text-xs text-stone-400 mb-6">Resumen general del estado financiero de Metalcof en tiempo real.</p>
       
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="card-inner p-4 rounded-xl border border-stone-800">
-          <span class="text-xs text-stone-400 block font-medium">DEUDA TOTAL DE CLIENTES (En la calle)</span>
+          <span class="text-xs text-stone-400 block font-medium">DEUDA TOTAL (En la calle)</span>
           <span id="globalDeudaTotal" class="text-2xl font-extrabold text-rose-500 block mt-1">$0,00</span>
-          <span class="text-[10px] text-stone-500 mt-1 block">Suma de saldos pendientes de cobro</span>
+          <span class="text-[10px] text-stone-500 mt-1 block">Saldos pendientes de cobro</span>
         </div>
         <div class="card-inner p-4 rounded-xl border border-stone-800">
-          <span class="text-xs text-stone-400 block font-medium">INGRESOS TOTALES (Este Mes)</span>
+          <span class="text-xs text-stone-400 block font-medium">INGRESOS (Este Mes)</span>
           <span id="globalIngresosMes" class="text-2xl font-extrabold text-emerald-400 block mt-1">$0,00</span>
-          <span class="text-[10px] text-stone-500 mt-1 block">Pagos y entregas recibidas en el mes</span>
+          <span class="text-[10px] text-stone-500 mt-1 block">Pagos recibidos en el mes</span>
         </div>
         <div class="card-inner p-4 rounded-xl border border-stone-800">
-          <span class="text-xs text-stone-400 block font-medium">TOTAL VENTAS / CORTES (Este Mes)</span>
+          <span class="text-xs text-stone-400 block font-medium">VENTAS (Este Mes)</span>
           <span id="globalVentasMes" class="text-2xl font-extrabold text-amber-400 block mt-1">$0,00</span>
-          <span class="text-[10px] text-stone-500 mt-1 block">Volumen de cortes generados en el mes</span>
+          <span class="text-[10px] text-stone-500 mt-1 block">Volumen facturado en el mes</span>
+        </div>
+        <div class="card-inner p-4 rounded-xl border border-stone-800">
+          <span class="text-xs text-stone-400 block font-medium">CANTIDAD DE VENTAS (Mes)</span>
+          <span id="globalCantVentasMes" class="text-2xl font-extrabold text-violet-400 block mt-1">0</span>
+          <span class="text-[10px] text-stone-500 mt-1 block">Cortes realizados en el mes</span>
         </div>
       </div>
     </div>
@@ -112,7 +124,7 @@
 
       <div class="card-dark p-6 rounded-2xl shadow-xl">
         <h3 class="font-bold text-white text-base mb-2"><i class="fas fa-lightbulb text-amber-400 mr-2"></i> Estado de Conexión</h3>
-        <p class="text-xs text-stone-300 mt-2">Sincronización automática activa con Google Sheets para PC y celular.</p>
+        <p class="text-xs text-stone-300 mt-2">Sincronización automática activa con Google Sheets para PC y celular con numeración universal de órdenes.</p>
       </div>
     </div>
   </main>
@@ -284,7 +296,7 @@
     </div>
   </div>
 
-  <!-- NUEVO MODAL: AGREGAR COMPRA GENERAL (DESDE EL ENCABEZADO) -->
+  <!-- MODAL: AGREGAR COMPRA GENERAL (DESDE EL ENCABEZADO) -->
   <div id="modalCompraGeneral" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
     <div class="card-dark p-6 rounded-xl max-w-md w-full shadow-2xl">
       <h3 class="text-lg font-bold text-stone-100 mb-4"><i class="fas fa-plus-circle text-rose-500 mr-2"></i> Agregar Compra / Venta Rápida</h3>
@@ -325,7 +337,7 @@
         </div>
         <div class="flex justify-end gap-2 pt-2">
           <button type="button" onclick="cerrarModales()" class="px-4 py-2 text-xs text-stone-300 hover:text-white">Cancelar</button>
-          <button type="submit" class="bg-rose-700 hover:bg-rose-800 px-4 py-2 rounded-lg text-xs font-bold text-white">Guardar Compra</button>
+          <button type="submit" class="btn-violeta px-4 py-2 rounded-lg text-xs font-bold text-white">Guardar Compra</button>
         </div>
       </form>
     </div>
@@ -395,6 +407,22 @@
       return Object.values(mapaClientes);
     }
 
+    function obtenerTodasLasVentasOrdenadas() {
+      let todasLasVentas = [];
+      clientes.forEach(c => {
+        if (c.movimientos) {
+          c.movimientos.forEach(m => {
+            if (m.tipo === 'DEUDA') {
+              todasLasVentas.push({ ...m, clienteNombre: c.nombre });
+            }
+          });
+        }
+      });
+      // Ordenamos cronológicamente para asignar orden universal creciente
+      todasLasVentas.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+      return todasLasVentas;
+    }
+
     function formatearMoneda(monto) {
       return '$' + Number(monto || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
@@ -417,6 +445,7 @@
       let deudaTotal = 0;
       let ingresosMes = 0;
       let ventasMes = 0;
+      let cantVentasMes = 0;
       
       const hoy = new Date().toISOString().split('T')[0];
       const mesActual = hoy.substring(0, 7);
@@ -427,7 +456,10 @@
           c.movimientos.forEach(m => {
             if (m.fecha && m.fecha.startsWith(mesActual)) {
               if (m.tipo === 'PAGO') ingresosMes += m.monto;
-              if (m.tipo === 'DEUDA') ventasMes += m.monto;
+              if (m.tipo === 'DEUDA') {
+                ventasMes += m.monto;
+                cantVentasMes++;
+              }
             }
           });
         }
@@ -436,6 +468,7 @@
       document.getElementById('globalDeudaTotal').innerText = formatearMoneda(deudaTotal);
       document.getElementById('globalIngresosMes').innerText = formatearMoneda(ingresosMes);
       document.getElementById('globalVentasMes').innerText = formatearMoneda(ventasMes);
+      document.getElementById('globalCantVentasMes').innerText = cantVentasMes;
     }
 
     function guardarEnStorage() {
@@ -614,15 +647,32 @@
         return;
       }
 
+      // Obtenemos la lista global de ventas ordenadas para calcular el número de orden universal único ("DNI")
+      const todasVentas = obtenerTodasLasVentasOrdenadas();
+
       const ordenados = [...cliente.movimientos].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
       
-      ordenados.forEach((mov, index) => {
+      ordenados.forEach(mov => {
         const tr = document.createElement('tr');
         tr.className = "hover:bg-stone-800/40";
         const esDeuda = mov.tipo === 'DEUDA';
         
-        let numOrden = cliente.movimientos.length - index;
-        let detalleTexto = `<span class="text-xs text-amber-400 font-bold mr-1">[Ord #${numOrden}]</span> ${escapeHtml(mov.detalle || '-')}`;
+        let etiquetaOrden = '';
+        if (esDeuda) {
+          const indexVenta = todasVentas.findIndex(v => v.id === mov.id);
+          if (indexVenta !== -1) {
+            etiquetaOrden = `<span class="text-xs text-amber-400 font-bold mr-1">[Ord #${indexVenta + 1}]</span>`;
+          }
+        } else if (mov.id && mov.id.endsWith('_pago')) {
+          // Si es un pago en el acto, buscamos la deuda gemela para mostrarle el mismo número de orden universal
+          const idDeudaOriginal = mov.id.replace('_pago', '');
+          const indexVenta = todasVentas.findIndex(v => v.id === idDeudaOriginal);
+          if (indexVenta !== -1) {
+            etiquetaOrden = `<span class="text-xs text-amber-400 font-bold mr-1">[Ord #${indexVenta + 1}]</span>`;
+          }
+        }
+
+        let detalleTexto = `${etiquetaOrden}${escapeHtml(mov.detalle || '-')}`;
         if (mov.metodoPago) {
           detalleTexto += ` <span class="text-[10px] bg-stone-700 px-1.5 py-0.5 rounded text-stone-300 ml-1"><i class="fas fa-wallet mr-0.5"></i>${escapeHtml(mov.metodoPago)}</span>`;
         }
@@ -706,23 +756,35 @@
 
       const idUnicoBase = 'mov_' + Date.now();
       
-      cliente.movimientos.push({ 
-        id: idUnicoBase, 
-        tipo: 'DEUDA', 
-        fecha, 
-        monto, 
-        detalle,
-        metodoPago: tipo === 'DEUDA' ? metodoPago : '' 
-      });
+      if (tipo === 'DEUDA') {
+        cliente.movimientos.push({ 
+          id: idUnicoBase, 
+          tipo: 'DEUDA', 
+          fecha, 
+          monto, 
+          detalle,
+          metodoPago 
+        });
 
-      if (tipo === 'DEUDA' && pagadoEnActo) {
+        if (pagadoEnActo) {
+          cliente.movimientos.push({
+            id: idUnicoBase + '_pago',
+            tipo: 'PAGO',
+            fecha,
+            monto,
+            detalle: 'Pago en el acto' + (detalle ? ` (${detalle})` : ''),
+            metodoPago
+          });
+        }
+      } else {
+        // Es un pago independiente
         cliente.movimientos.push({
-          id: idUnicoBase + '_pago',
+          id: idUnicoBase,
           tipo: 'PAGO',
           fecha,
           monto,
-          detalle: 'Pago en el acto' + (detalle ? ` (${detalle})` : ''),
-          metodoPago
+          detalle: detalle || 'Entrega / Pago a cuenta',
+          metodoPago: ''
         });
       }
 
@@ -789,7 +851,6 @@
       guardarEnStorage();
       cerrarModales();
       
-      // Si estamos en la sección de clientes, actualizamos la vista de ese cliente
       if (!document.getElementById('seccionClientes').classList.contains('hidden')) {
         seleccionarCliente(cliente.id);
       }
@@ -799,7 +860,8 @@
       const cliente = clientes.find(c => c.id === clienteSeleccionadoId);
       if (!cliente) return;
       if (confirm('¿Estás segura de eliminar este movimiento?')) {
-        cliente.movimientos = cliente.movimientos.filter(m => m.id !== movId && m.id !== (movId + '_pago') && m.id !== movId.replace('_pago', ''));
+        let baseId = movId.replace('_pago', '');
+        cliente.movimientos = cliente.movimientos.filter(m => m.id !== baseId && m.id !== (baseId + '_pago'));
         guardarEnStorage();
         seleccionarCliente(clienteSeleccionadoId);
       }
