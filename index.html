@@ -109,7 +109,7 @@
 
       <div class="card-dark p-6 rounded-2xl shadow-xl">
         <h3 class="font-bold text-white text-base mb-2"><i class="fas fa-lightbulb text-amber-400 mr-2"></i> Estado de Conexión</h3>
-        <p class="text-xs text-stone-300 mt-2">La aplicación se conecta directamente a Google Sheets para compartir los datos de manera automática entre la computadora y el celular de tu mamá.</p>
+        <p class="text-xs text-stone-300 mt-2">La aplicación se conecta automáticamente a Google Sheets para compartir clientes y movimientos entre la PC y el celular.</p>
       </div>
     </div>
   </main>
@@ -198,7 +198,7 @@
               <thead class="text-xs uppercase bg-stone-900/50 text-stone-400 border-b border-stone-700">
                 <tr>
                   <th class="py-2.5 px-3">Fecha</th>
-                  <th class="py-2.5 px-3">Tipo / Concepto / Pago</th>
+                  <th class="py-2.5 px-3">Tipo / Detalle / Orden</th>
                   <th class="py-2.5 px-3 text-right">Monto</th>
                   <th class="py-2.5 px-3 text-center">Acción</th>
                 </tr>
@@ -288,12 +288,12 @@
     let clienteSeleccionadoId = null;
     let filtroCajaModo = 'HOY';
 
-    // Al cargar la página, descargamos todo desde Google Sheets
+    // Cargar datos sincronizados desde Google Sheets
     async function inicializarDatos() {
       const icono = document.getElementById('iconoSync');
       const texto = document.getElementById('textoSync');
       if(icono) icono.classList.remove('hidden');
-      if(texto) texto.innerText = 'Cargando de Sheets...';
+      if(texto) texto.innerText = 'Cargando...';
 
       try {
         const respuesta = await fetch(APPS_SCRIPT_URL);
@@ -304,7 +304,6 @@
           if(texto) texto.innerText = 'Sincronizado';
         }
       } catch (e) {
-        // Si no hay internet, usamos lo que quedó en el navegador como respaldo
         clientes = JSON.parse(localStorage.getItem('metalcof_clientes')) || [];
         if(texto) texto.innerText = 'Modo Offline';
       } finally {
@@ -332,10 +331,9 @@
           };
         }
         
-        // Si tiene movimiento registrado
         if (r.fecha && r.tipo && r.monto !== '') {
           mapaClientes[r.cliente].movimientos.push({
-            id: 'mov_' + Math.random().toString(36).substr(2, 9),
+            id: r.idMov || ('mov_' + Math.random().toString(36).substr(2, 9)),
             tipo: r.tipo,
             fecha: r.fecha,
             detalle: r.detalle,
@@ -409,10 +407,20 @@
       let registros = [];
       clientes.forEach(c => {
         if (!c.movimientos || c.movimientos.length === 0) {
-          registros.push([c.nombre, c.telefono || '', c.notas || '', '', '', '', '', '']);
+          registros.push({ cliente: c.nombre, telefono: c.telefono || '', notas: c.notas || '', fecha: '', tipo: '', detalle: '', metodoPago: '', monto: '', idMov: '' });
         } else {
           c.movimientos.forEach(m => {
-            registros.push([c.nombre, c.telefono || '', c.notas || '', m.fecha, m.tipo, m.detalle || '', m.metodoPago || '', m.monto]);
+            registros.push({ 
+              cliente: c.nombre, 
+              telefono: c.telefono || '', 
+              notas: c.notas || '', 
+              fecha: m.fecha, 
+              tipo: m.tipo, 
+              detalle: m.detalle || '', 
+              metodoPago: m.metodoPago || '', 
+              monto: m.monto,
+              idMov: m.id || ''
+            });
           });
         }
       });
@@ -563,12 +571,13 @@
       }
 
       const ordenados = [...cliente.movimientos].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
-      ordenados.forEach(mov => {
+      ordenados.forEach((mov, index) => {
         const tr = document.createElement('tr');
         tr.className = "hover:bg-stone-800/40";
         const esDeuda = mov.tipo === 'DEUDA';
         
-        let detalleTexto = escapeHtml(mov.detalle || '-');
+        let numOrden = cliente.movimientos.length - index;
+        let detalleTexto = `<span class="text-xs text-amber-400 font-bold mr-1">[Ord #${numOrden}]</span> ${escapeHtml(mov.detalle || '-')}`;
         if (mov.metodoPago) {
           detalleTexto += ` <span class="text-[10px] bg-stone-700 px-1.5 py-0.5 rounded text-stone-300 ml-1"><i class="fas fa-wallet mr-0.5"></i>${escapeHtml(mov.metodoPago)}</span>`;
         }
@@ -649,8 +658,9 @@
 
       if (!fecha || isNaN(monto) || monto <= 0) return;
 
+      const idMovBase = 'mov_' + Date.now();
       cliente.movimientos.push({ 
-        id: 'mov_' + Date.now(), 
+        id: idMovBase, 
         tipo: 'DEUDA', 
         fecha, 
         monto, 
@@ -664,7 +674,7 @@
           tipo: 'PAGO',
           fecha,
           monto,
-          detalle: 'Pago de compra en el acto' + (detalle ? ` (${detalle})` : ''),
+          detalle: 'Pago en el acto' + (detalle ? ` (${detalle})` : ''),
           metodoPago
         });
       }
@@ -700,13 +710,13 @@
         alert('No hay clientes ni datos para exportar.');
         return;
       }
-      let csv = 'Cliente;Telefono;Notas;Fecha Movimiento;Tipo;Detalle;MetodoPago;Monto\n';
+      let csv = 'Cliente;Telefono;Notas;Fecha Movimiento;Tipo;Detalle;MetodoPago;Monto;IDMov\n';
       clientes.forEach(c => {
         if (!c.movimientos || c.movimientos.length === 0) {
-          csv += `"${c.nombre}";"${c.telefono || ''}";"${c.notas || ''}";"";"";"";"";""\n`;
+          csv += `"${c.nombre}";"${c.telefono || ''}";"${c.notas || ''}";"";"";"";"";"";""\n`;
         } else {
           c.movimientos.forEach(m => {
-            csv += `"${c.nombre}";"${c.telefono || ''}";"${c.notas || ''}";"${m.fecha}";"${m.tipo}";"${m.detalle || ''}";"${m.metodoPago || ''}";"${m.monto}"\n`;
+            csv += `"${c.nombre}";"${c.telefono || ''}";"${c.notas || ''}";"${m.fecha}";"${m.tipo}";"${m.detalle || ''}";"${m.metodoPago || ''}";"${m.monto}";"${m.id || ''}"\n`;
           });
         }
       });
@@ -722,7 +732,7 @@
       return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
-    // Arrancamos consultando los datos al Google Sheet
+    // Inicializar app leyendo desde Sheets
     inicializarDatos();
   </script>
 </body>
