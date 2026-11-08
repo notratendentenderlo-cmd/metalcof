@@ -57,8 +57,12 @@
       </div>
 
       <div class="flex items-center gap-2">
+        <span id="indicadorSheets" class="text-xs px-2.5 py-1 rounded bg-stone-800 text-stone-400 border border-stone-700 flex items-center gap-1.5">
+          <i class="fas fa-sync-alt animate-spin hidden" id="iconoSync"></i>
+          <span id="textoSync">Sheets Conectado</span>
+        </span>
         <button onclick="exportarCSV()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
-          <i class="fas fa-file-excel"></i> Copia de Seguridad (Excel)
+          <i class="fas fa-file-excel"></i> Copia (Excel)
         </button>
       </div>
     </div>
@@ -66,22 +70,36 @@
 
   <main class="max-w-6xl mx-auto px-4 mt-6 grid grid-cols-1 md:grid-cols-12 gap-6">
 
-    <!-- COLUMNA IZQUIERDA: BUSCADOR Y LISTA -->
+    <!-- COLUMNA IZQUIERDA: RESUMEN DE CAJA Y BUSCADOR -->
     <section class="md:col-span-4 space-y-4">
       
-      <!-- Guía Rápida para Mamá -->
-      <div class="bg-stone-800/80 border border-stone-600 p-3.5 rounded-xl text-xs text-stone-200">
-        <p class="font-bold text-amber-400 mb-1"><i class="fas fa-lightbulb"></i> ¿Cómo usar este sistema?</p>
-        <ol class="list-decimal list-inside space-y-1 text-stone-300">
-          <li>Buscá a un cliente por su nombre o creá uno nuevo.</li>
-          <li>Registrá sus compras/cortes o sus entregas de dinero.</li>
-          <li>El saldo se actualiza automáticamente.</li>
-        </ol>
+      <!-- RESUMEN DE CAJA -->
+      <div class="card-dark p-4 rounded-xl shadow-md border-t-4 border-t-amber-500">
+        <h3 class="font-bold text-stone-200 text-sm mb-3 flex items-center justify-between">
+          <span><i class="fas fa-cash-register text-amber-400 mr-1.5"></i> Resumen de Caja</span>
+        </h3>
+
+        <div class="flex gap-1 bg-stone-900/60 p-1 rounded-lg mb-3">
+          <button id="btnFiltroHoy" onclick="cambiarFiltroCaja('HOY')" class="flex-1 text-xs py-1.5 rounded-md font-bold transition bg-amber-600 text-white">Hoy</button>
+          <button id="btnFiltroMes" onclick="cambiarFiltroCaja('MES')" class="flex-1 text-xs py-1.5 rounded-md font-medium text-stone-400 hover:text-white transition">Este Mes</button>
+        </div>
+
+        <div class="space-y-2">
+          <div class="card-inner p-2.5 rounded-lg border border-stone-800 flex justify-between items-center">
+            <span class="text-xs text-stone-300"><i class="fas fa-arrow-down text-emerald-400 mr-1"></i> Dinero Ingresado (Pagos):</span>
+            <span id="cajaIngresos" class="text-sm font-bold text-emerald-400">$0,00</span>
+          </div>
+          <div class="card-inner p-2.5 rounded-lg border border-stone-800 flex justify-between items-center">
+            <span class="text-xs text-stone-300"><i class="fas fa-shopping-cart text-rose-400 mr-1"></i> Total Ventas / Deudas:</span>
+            <span id="cajaVentas" class="text-sm font-bold text-rose-400">$0,00</span>
+          </div>
+        </div>
       </div>
 
+      <!-- BUSCADOR -->
       <div class="card-dark p-4 rounded-xl shadow-md">
         <div class="flex justify-between items-center mb-3">
-          <h2 class="font-bold text-stone-200"><i class="fas fa-search text-stone-400 mr-1"></i> Buscar Cliente</h2>
+          <h2 class="font-bold text-stone-200 text-sm"><i class="fas fa-search text-stone-400 mr-1"></i> Buscar Cliente</h2>
           <button onclick="abrirModalCliente()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition">
             + Nuevo Cliente
           </button>
@@ -89,13 +107,14 @@
 
         <input type="text" id="inputBuscar" oninput="filtrarClientes()" placeholder="Escribí un nombre..." class="w-full px-3 py-2 rounded-lg text-sm mb-3">
 
-        <div id="listaClientes" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-          <!-- Se llena dinámicamente -->
+        <div id="listaClientes" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+          <!-- Dinámico -->
         </div>
       </div>
+
     </section>
 
-    <!-- COLUMNA DERECHA: FICHA DEL CLIENTE SELECCIONADO -->
+    <!-- COLUMNA DERECHA: FICHA DEL CLIENTE -->
     <section class="md:col-span-8 space-y-6">
       
       <div id="vistaVacia" class="card-dark p-12 rounded-xl text-center text-stone-400">
@@ -106,7 +125,6 @@
 
       <div id="vistaCliente" class="hidden space-y-6">
         
-        <!-- Tarjeta de Saldo y Datos -->
         <div class="card-dark p-5 rounded-xl shadow-md relative">
           <div class="flex flex-wrap justify-between items-start gap-4 mb-4">
             <div>
@@ -116,7 +134,6 @@
               <p id="clienteNotas" class="text-xs text-stone-400 mt-1 italic"></p>
             </div>
 
-            <!-- Caja Destacada de Saldo -->
             <div class="card-inner p-4 rounded-xl border border-stone-700 text-right min-w-[200px]">
               <span class="text-xs text-stone-400 block font-medium">SALDO PENDIENTE TOTAL</span>
               <span id="clienteSaldo" class="text-3xl font-extrabold block my-0.5"></span>
@@ -124,7 +141,6 @@
             </div>
           </div>
 
-          <!-- Botones de Acción -->
           <div class="flex flex-wrap gap-2 pt-3 border-t border-stone-700/60">
             <button onclick="abrirModalMovimiento('DEUDA')" class="bg-rose-700 hover:bg-rose-800 text-white text-sm px-4 py-2 rounded-lg font-medium transition flex items-center gap-1.5">
               <i class="fas fa-plus-circle"></i> + Agregar Compra / Corte (Debe)
@@ -135,7 +151,6 @@
           </div>
         </div>
 
-        <!-- Historial de Movimientos -->
         <div class="card-dark p-5 rounded-xl shadow-md">
           <h3 class="font-bold text-stone-200 mb-4 flex items-center gap-2">
             <i class="fas fa-history text-stone-400"></i> Historial de Movimientos
@@ -152,7 +167,7 @@
                 </tr>
               </thead>
               <tbody id="tablaMovimientos" class="divide-y divide-stone-700/50">
-                <!-- Se llena dinámicamente -->
+                <!-- Dinámico -->
               </tbody>
             </table>
           </div>
@@ -163,7 +178,7 @@
     </section>
   </main>
 
-  <!-- MODAL: CREAR/EDITAR CLIENTE -->
+  <!-- MODAL: CLIENTE -->
   <div id="modalCliente" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
     <div class="card-dark p-6 rounded-xl max-w-md w-full shadow-2xl">
       <h3 class="text-lg font-bold text-stone-100 mb-4" id="modalClienteTitulo">Nuevo Cliente</h3>
@@ -179,7 +194,7 @@
         </div>
         <div>
           <label class="block text-xs font-medium text-stone-300 mb-1">Notas / Observaciones (opcional)</label>
-          <textarea id="inputNotas" rows="2" placeholder="Ej: Medidas habituales, referencias, etc." class="w-full px-3 py-2 rounded-lg text-sm"></textarea>
+          <textarea id="inputNotas" rows="2" placeholder="Ej: Medidas habituales" class="w-full px-3 py-2 rounded-lg text-sm"></textarea>
         </div>
         <div class="flex justify-end gap-2 pt-2">
           <button type="button" onclick="cerrarModales()" class="px-4 py-2 text-xs text-stone-300 hover:text-white">Cancelar</button>
@@ -189,14 +204,14 @@
     </div>
   </div>
 
-  <!-- MODAL: CREAR MOVIMIENTO (COMPRA O PAGO) -->
+  <!-- MODAL: MOVIMIENTO -->
   <div id="modalMovimiento" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
     <div class="card-dark p-6 rounded-xl max-w-md w-full shadow-2xl">
       <h3 class="text-lg font-bold text-stone-100 mb-4" id="modalMovimientoTitulo">Registrar Movimiento</h3>
       <form id="formMovimiento" onsubmit="guardarMovimiento(event)" class="space-y-4">
         <input type="hidden" id="movimientoTipo">
         <div>
-          <label class="block text-xs font-medium text-stone-300 mb-1">Fecha *</label>
+          <label class="block text-xs font-medium text-stone-300 mb-1">Fecha * (Editable)</label>
           <input type="date" id="inputFecha" required class="w-full px-3 py-2 rounded-lg text-sm">
         </div>
         <div>
@@ -215,13 +230,90 @@
     </div>
   </div>
 
-  <!-- LÓGICA JAVASCRIPT -->
   <script>
+    // URL DE GOOGLE APPS SCRIPT CONFIGURADA
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOTH7RDwe3miTCuB3_CHHK95rr4Gsy3fyeBXhY2l5hnwdh8vmvnL3I8nqFhs26QVPO/exec';
+
     let clientes = JSON.parse(localStorage.getItem('metalcof_clientes')) || [];
     let clienteSeleccionadoId = null;
+    let filtroCajaModo = 'HOY';
 
     function guardarEnStorage() {
       localStorage.setItem('metalcof_clientes', JSON.stringify(clientes));
+      sincronizarConGoogleSheets();
+      calcularCajaDiaria();
+    }
+
+    async function sincronizarConGoogleSheets() {
+      if (!APPS_SCRIPT_URL) return;
+
+      const icono = document.getElementById('iconoSync');
+      const texto = document.getElementById('textoSync');
+      icono.classList.remove('hidden');
+      texto.innerText = 'Sincronizando...';
+
+      let registros = [];
+      clientes.forEach(c => {
+        if (!c.movimientos || c.movimientos.length === 0) {
+          registros.push([c.nombre, c.telefono || '', c.notas || '', '', '', '', '']);
+        } else {
+          c.movimientos.forEach(m => {
+            registros.push([c.nombre, c.telefono || '', c.notas || '', m.fecha, m.tipo, m.detalle || '', m.monto]);
+          });
+        }
+      });
+
+      try {
+        await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ registros: registros })
+        });
+        texto.innerText = 'Sheets Guardado';
+      } catch (e) {
+        texto.innerText = 'Error Sheets';
+      } finally {
+        icono.classList.add('hidden');
+      }
+    }
+
+    function cambiarFiltroCaja(modo) {
+      filtroCajaModo = modo;
+      const btnHoy = document.getElementById('btnFiltroHoy');
+      const btnMes = document.getElementById('btnFiltroMes');
+
+      if (modo === 'HOY') {
+        btnHoy.className = "flex-1 text-xs py-1.5 rounded-md font-bold transition bg-amber-600 text-white";
+        btnMes.className = "flex-1 text-xs py-1.5 rounded-md font-medium text-stone-400 hover:text-white transition";
+      } else {
+        btnMes.className = "flex-1 text-xs py-1.5 rounded-md font-bold transition bg-amber-600 text-white";
+        btnHoy.className = "flex-1 text-xs py-1.5 rounded-md font-medium text-stone-400 hover:text-white transition";
+      }
+      calcularCajaDiaria();
+    }
+
+    function calcularCajaDiaria() {
+      const hoy = new Date().toISOString().split('T')[0];
+      const mesActual = hoy.substring(0, 7);
+
+      let totalIngresos = 0;
+      let totalVentas = 0;
+
+      clientes.forEach(c => {
+        if (c.movimientos) {
+          c.movimientos.forEach(m => {
+            const coincide = filtroCajaModo === 'HOY' ? m.fecha === hoy : m.fecha.startsWith(mesActual);
+            if (coincide) {
+              if (m.tipo === 'PAGO') totalIngresos += m.monto;
+              if (m.tipo === 'DEUDA') totalVentas += m.monto;
+            }
+          });
+        }
+      });
+
+      document.getElementById('cajaIngresos').innerText = `$${totalIngresos.toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
+      document.getElementById('cajaVentas').innerText = `$${totalVentas.toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
     }
 
     function inicializarFechaHoy() {
@@ -232,14 +324,10 @@
     function renderizarClientes(filtro = '') {
       const contenedor = document.getElementById('listaClientes');
       contenedor.innerHTML = '';
-
       const filtrados = clientes.filter(c => c.nombre.toLowerCase().includes(filtro.toLowerCase()));
 
       if (filtrados.length === 0) {
-        contenedor.innerHTML = `
-          <div class="p-4 text-center text-xs text-stone-400 bg-stone-900/40 rounded-lg border border-dashed border-stone-700">
-            ${filtro ? 'No se encontró ningún cliente con ese nombre.' : 'No hay clientes registrados.'}
-          </div>`;
+        contenedor.innerHTML = `<div class="p-4 text-center text-xs text-stone-400 bg-stone-900/40 rounded-lg border border-dashed border-stone-700">${filtro ? 'No se encontró ningún cliente.' : 'No hay clientes registrados.'}</div>`;
         return;
       }
 
@@ -256,9 +344,7 @@
             <p class="text-xs text-stone-400">${c.telefono ? '<i class="fas fa-phone mr-1"></i>' + escapeHtml(c.telefono) : 'Sin teléfono'}</p>
           </div>
           <div class="text-right">
-            <span class="text-xs font-bold ${saldo > 0 ? 'text-rose-400' : 'text-emerald-400'}">
-              $${saldo.toLocaleString('es-AR', {minimumFractionDigits: 2})}
-            </span>
+            <span class="text-xs font-bold ${saldo > 0 ? 'text-rose-400' : 'text-emerald-400'}">$${saldo.toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
           </div>
         `;
         contenedor.appendChild(div);
@@ -268,21 +354,17 @@
     function calcularSaldo(clienteId) {
       const cliente = clientes.find(c => c.id === clienteId);
       if (!cliente || !cliente.movimientos) return 0;
-      return cliente.movimientos.reduce((acc, mov) => {
-        return mov.tipo === 'DEUDA' ? acc + mov.monto : acc - mov.monto;
-      }, 0);
+      return cliente.movimientos.reduce((acc, mov) => mov.tipo === 'DEUDA' ? acc + mov.monto : acc - mov.monto, 0);
     }
 
     function seleccionarCliente(id) {
       clienteSeleccionadoId = id;
       renderizarClientes(document.getElementById('inputBuscar').value);
-      
       const cliente = clientes.find(c => c.id === id);
       if (!cliente) return;
 
       document.getElementById('vistaVacia').classList.add('hidden');
       document.getElementById('vistaCliente').classList.remove('hidden');
-
       document.getElementById('clienteNombre').innerText = cliente.nombre;
       
       const elTel = document.getElementById('clienteTel');
@@ -298,7 +380,6 @@
       const saldo = calcularSaldo(id);
       const elSaldo = document.getElementById('clienteSaldo');
       const elBadge = document.getElementById('estadoBadge');
-
       elSaldo.innerText = `$${saldo.toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
 
       if (saldo > 0) {
@@ -321,34 +402,25 @@
     function renderizarMovimientos(cliente) {
       const tbody = document.getElementById('tablaMovimientos');
       tbody.innerHTML = '';
-
       if (!cliente.movimientos || cliente.movimientos.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-stone-500 text-xs">Sin movimientos registrados aún.</td></tr>`;
         return;
       }
 
       const ordenados = [...cliente.movimientos].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
-
       ordenados.forEach(mov => {
         const tr = document.createElement('tr');
         tr.className = "hover:bg-stone-800/40";
         const esDeuda = mov.tipo === 'DEUDA';
-        
         tr.innerHTML = `
           <td class="py-3 px-3 text-xs text-stone-300 whitespace-nowrap">${mov.fecha}</td>
           <td class="py-3 px-3">
-            <span class="text-xs font-semibold px-2 py-0.5 rounded ${esDeuda ? 'bg-rose-950 text-rose-300' : 'bg-emerald-950 text-emerald-300'}">
-              ${esDeuda ? 'Compra / Corte' : 'Entrega / Pago'}
-            </span>
+            <span class="text-xs font-semibold px-2 py-0.5 rounded ${esDeuda ? 'bg-rose-950 text-rose-300' : 'bg-emerald-950 text-emerald-300'}">${esDeuda ? 'Compra / Corte' : 'Entrega / Pago'}</span>
             <p class="text-xs text-stone-300 mt-0.5">${escapeHtml(mov.detalle || '-')}</p>
           </td>
-          <td class="py-3 px-3 text-right font-bold text-sm ${esDeuda ? 'text-rose-400' : 'text-emerald-400'}">
-            ${esDeuda ? '+' : '-'}$${mov.monto.toLocaleString('es-AR', {minimumFractionDigits: 2})}
-          </td>
+          <td class="py-3 px-3 text-right font-bold text-sm ${esDeuda ? 'text-rose-400' : 'text-emerald-400'}">${esDeuda ? '+' : '-'}$${mov.monto.toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
           <td class="py-3 px-3 text-center">
-            <button onclick="eliminarMovimiento('${mov.id}')" class="text-stone-500 hover:text-rose-400 text-xs px-2 py-1" title="Eliminar registro">
-              <i class="fas fa-trash"></i>
-            </button>
+            <button onclick="eliminarMovimiento('${mov.id}')" class="text-stone-500 hover:text-rose-400 text-xs px-2 py-1" title="Eliminar"><i class="fas fa-trash"></i></button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -368,17 +440,9 @@
       const nombre = document.getElementById('inputNombre').value.trim();
       const telefono = document.getElementById('inputTelefono').value.trim();
       const notas = document.getElementById('inputNotas').value.trim();
-
       if (!nombre) return;
 
-      const nuevoCliente = {
-        id: 'cli_' + Date.now(),
-        nombre,
-        telefono,
-        notas,
-        movimientos: []
-      };
-
+      const nuevoCliente = { id: 'cli_' + Date.now(), nombre, telefono, notas, movimientos: [] };
       clientes.push(nuevoCliente);
       guardarEnStorage();
       cerrarModales();
@@ -391,7 +455,6 @@
       document.getElementById('formMovimiento').reset();
       inicializarFechaHoy();
       document.getElementById('movimientoTipo').value = tipo;
-
       const titulo = document.getElementById('modalMovimientoTitulo');
       const btn = document.getElementById('btnGuardarMovimiento');
 
@@ -402,7 +465,6 @@
         titulo.innerText = 'Registrar Entrega / Pago (Haber)';
         btn.className = 'bg-emerald-700 hover:bg-emerald-800 px-4 py-2 rounded-lg text-xs font-bold text-white';
       }
-
       document.getElementById('modalMovimiento').classList.remove('hidden');
       document.getElementById('modalMovimiento').classList.add('flex');
     }
@@ -416,17 +478,9 @@
       const fecha = document.getElementById('inputFecha').value;
       const monto = parseFloat(document.getElementById('inputMonto').value);
       const detalle = document.getElementById('inputDetalle').value.trim();
-
       if (!fecha || isNaN(monto) || monto <= 0) return;
 
-      cliente.movimientos.push({
-        id: 'mov_' + Date.now(),
-        tipo,
-        fecha,
-        monto,
-        detalle
-      });
-
+      cliente.movimientos.push({ id: 'mov_' + Date.now(), tipo, fecha, monto, detalle });
       guardarEnStorage();
       cerrarModales();
       seleccionarCliente(clienteSeleccionadoId);
@@ -435,7 +489,6 @@
     function eliminarMovimiento(movId) {
       const cliente = clientes.find(c => c.id === clienteSeleccionadoId);
       if (!cliente) return;
-
       if (confirm('¿Estás segura de eliminar este movimiento?')) {
         cliente.movimientos = cliente.movimientos.filter(m => m.id !== movId);
         guardarEnStorage();
@@ -459,9 +512,7 @@
         alert('No hay clientes ni datos para exportar.');
         return;
       }
-
       let csv = 'Cliente;Telefono;Notas;Fecha Movimiento;Tipo;Detalle;Monto\n';
-
       clientes.forEach(c => {
         if (!c.movimientos || c.movimientos.length === 0) {
           csv += `"${c.nombre}";"${c.telefono || ''}";"${c.notas || ''}";"";"";"";""\n`;
@@ -471,7 +522,6 @@
           });
         }
       });
-
       const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
@@ -484,9 +534,9 @@
       return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
-    // Inicialización al cargar la página
     renderizarClientes();
     inicializarFechaHoy();
+    calcularCajaDiaria();
   </script>
 </body>
 </html>
