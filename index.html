@@ -1,956 +1,1 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>METALCOF - Cuenta Corriente de Clientes</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    body {
-      background-color: #523f39;
-      color: #ffffff;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-    .card-dark {
-      background-color: #362925;
-      border: 1px solid #483732;
-    }
-    .card-inner {
-      background-color: #2a1f1c;
-    }
-    input, select, textarea {
-      background-color: #2a1f1c !important;
-      border: 1px solid #5a4640 !important;
-      color: #ffffff !important;
-    }
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: #e53e3e !important;
-      box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.2);
-    }
-    .btn-violeta {
-      background-color: #805AD5;
-    }
-    .btn-violeta:hover {
-      background-color: #6B46C1;
-    }
-  </style>
-</head>
-<body class="min-h-screen pb-12">
-
-  <!-- ENCABEZADO -->
-  <header class="card-dark border-b border-stone-700 shadow-md">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-3 cursor-pointer" onclick="irInicio()">
-        <!-- Logo METALCOF Vectorial -->
-        <svg class="w-12 h-12 flex-shrink-0" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <polygon points="110,35 190,35 170,65 130,65" fill="#E53E3E"/>
-          <polygon points="205,45 255,115 230,132 185,72" fill="#DD6B20"/>
-          <polygon points="255,185 205,255 185,228 230,168" fill="#D53F8C"/>
-          <polygon points="190,265 110,265 130,235 170,235" fill="#38A169"/>
-          <polygon points="95,255 45,185 70,168 115,228" fill="#3182CE"/>
-          <polygon points="45,115 95,45 115,72 70,132" fill="#805AD5"/>
-          <g fill="#FFFFFF">
-            <path d="M 90,85 L 122,85 L 150,140 L 178,85 L 210,85 L 210,215 L 180,215 L 180,130 L 158,175 L 142,175 L 120,130 L 120,215 L 90,215 Z"/>
-            <text x="150" y="165" font-family="Arial, sans-serif" font-weight="900" font-size="22" letter-spacing="4" text-anchor="middle" fill="#2a1f1c">METALCOF</text>
-          </g>
-        </svg>
-        <div>
-          <h1 class="text-xl font-bold tracking-wider text-white">METALCOF</h1>
-          <p class="text-xs text-stone-300">Gestión de Cuentas Corrientes y Clientes</p>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2 flex-wrap">
-        <button onclick="abrirModalCompraGeneral()" class="btn-violeta text-white px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-md">
-          <i class="fas fa-plus-circle"></i> Agregar Compra
-        </button>
-        <button onclick="irInicio()" class="bg-stone-700 hover:bg-stone-600 text-white px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
-          <i class="fas fa-home"></i> Inicio
-        </button>
-        <span id="indicadorSheets" class="text-xs px-2.5 py-1 rounded bg-stone-800 text-stone-400 border border-stone-700 hidden sm:flex items-center gap-1.5">
-          <i class="fas fa-sync-alt animate-spin hidden" id="iconoSync"></i>
-          <span id="textoSync">Sincronizado</span>
-        </span>
-        <button onclick="exportarCSV()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-2">
-          <i class="fas fa-file-excel"></i> Copia (Excel)
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- VISTA 1: INICIO / BALANCE GLOBAL -->
-  <main id="seccionInicio" class="max-w-6xl mx-auto px-4 mt-8 space-y-6">
-    <div class="card-dark p-6 rounded-2xl shadow-xl border-t-4 border-t-amber-500">
-      <h2 class="text-xl font-bold text-white mb-2"><i class="fas fa-chart-pie text-amber-400 mr-2"></i> Balance Global del Negocio</h2>
-      <p class="text-xs text-stone-400 mb-6">Resumen general del estado financiero de Metalcof en tiempo real.</p>
-      
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="card-inner p-4 rounded-xl border border-stone-800">
-          <span class="text-xs text-stone-400 block font-medium">DEUDA TOTAL (En la calle)</span>
-          <span id="globalDeudaTotal" class="text-2xl font-extrabold text-rose-500 block mt-1">$0,00</span>
-          <span class="text-[10px] text-stone-500 mt-1 block">Saldos pendientes de cobro</span>
-        </div>
-        <div class="card-inner p-4 rounded-xl border border-stone-800">
-          <span class="text-xs text-stone-400 block font-medium">INGRESOS (Este Mes)</span>
-          <span id="globalIngresosMes" class="text-2xl font-extrabold text-emerald-400 block mt-1">$0,00</span>
-          <span class="text-[10px] text-stone-500 mt-1 block">Pagos recibidos en el mes</span>
-        </div>
-        <div class="card-inner p-4 rounded-xl border border-stone-800">
-          <span class="text-xs text-stone-400 block font-medium">VENTAS (Este Mes)</span>
-          <span id="globalVentasMes" class="text-2xl font-extrabold text-amber-400 block mt-1">$0,00</span>
-          <span class="text-[10px] text-stone-500 mt-1 block">Volumen facturado en el mes</span>
-        </div>
-        <div class="card-inner p-4 rounded-xl border border-stone-800">
-          <span class="text-xs text-stone-400 block font-medium">CANTIDAD DE VENTAS (Mes)</span>
-          <span id="globalCantVentasMes" class="text-2xl font-extrabold text-violet-400 block mt-1">0</span>
-          <span class="text-[10px] text-stone-500 mt-1 block">Cortes realizados en el mes</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="card-dark p-6 rounded-2xl shadow-xl flex flex-col justify-between">
-        <div>
-          <h3 class="font-bold text-white text-base mb-2"><i class="fas fa-users text-amber-400 mr-2"></i> Gestión de Clientes y Cuentas</h3>
-          <p class="text-xs text-stone-300 mb-4">Buscá clientes, revisá fichas de cuenta corriente, cargá nuevos recortes o registra entregas de dinero.</p>
-        </div>
-        <button onclick="irClientes()" class="bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2">
-          <i class="fas fa-address-book"></i> Ir al Listado de Clientes y Cajas
-        </button>
-      </div>
-
-      <div class="card-dark p-6 rounded-2xl shadow-xl">
-        <h3 class="font-bold text-white text-base mb-2"><i class="fas fa-lightbulb text-amber-400 mr-2"></i> Estado de Conexión</h3>
-        <p class="text-xs text-stone-300 mt-2">Sincronización automática activa con Google Sheets para PC y celular con numeración universal de órdenes.</p>
-      </div>
-    </div>
-  </main>
-
-  <!-- VISTA 2: CLIENTES Y CAJA -->
-  <main id="seccionClientes" class="max-w-6xl mx-auto px-4 mt-6 hidden grid-cols-1 md:grid-cols-12 gap-6">
-
-    <section class="md:col-span-4 space-y-4">
-      <div class="card-dark p-4 rounded-xl shadow-md border-t-4 border-t-amber-500">
-        <h3 class="font-bold text-stone-200 text-sm mb-3 flex items-center justify-between">
-          <span><i class="fas fa-cash-register text-amber-400 mr-1.5"></i> Resumen de Caja</span>
-        </h3>
-
-        <div class="flex gap-1 bg-stone-900/60 p-1 rounded-lg mb-3">
-          <button id="btnFiltroHoy" onclick="cambiarFiltroCaja('HOY')" class="flex-1 text-xs py-1.5 rounded-md font-bold transition bg-amber-600 text-white">Hoy</button>
-          <button id="btnFiltroMes" onclick="cambiarFiltroCaja('MES')" class="flex-1 text-xs py-1.5 rounded-md font-medium text-stone-400 hover:text-white transition">Este Mes</button>
-        </div>
-
-        <div class="space-y-2">
-          <div class="card-inner p-2.5 rounded-lg border border-stone-800 flex justify-between items-center">
-            <span class="text-xs text-stone-300"><i class="fas fa-arrow-down text-emerald-400 mr-1"></i> Dinero Ingresado:</span>
-            <span id="cajaIngresos" class="text-sm font-bold text-emerald-400">$0,00</span>
-          </div>
-          <div class="card-inner p-2.5 rounded-lg border border-stone-800 flex justify-between items-center">
-            <span class="text-xs text-stone-300"><i class="fas fa-shopping-cart text-rose-400 mr-1"></i> Total Ventas / Deudas:</span>
-            <span id="cajaVentas" class="text-sm font-bold text-rose-400">$0,00</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card-dark p-4 rounded-xl shadow-md">
-        <div class="flex justify-between items-center mb-3">
-          <h2 class="font-bold text-stone-200 text-sm"><i class="fas fa-search text-stone-400 mr-1"></i> Buscar Cliente</h2>
-          <button onclick="abrirModalCliente()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition">
-            + Nuevo Cliente
-          </button>
-        </div>
-
-        <input type="text" id="inputBuscar" oninput="filtrarClientes()" placeholder="Escribí un nombre..." class="w-full px-3 py-2 rounded-lg text-sm mb-3">
-
-        <div id="listaClientes" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1"></div>
-      </div>
-    </section>
-
-    <section class="md:col-span-8 space-y-6">
-      <div id="vistaVacia" class="card-dark p-12 rounded-xl text-center text-stone-400">
-        <i class="fas fa-user-circle text-6xl mb-3 text-stone-500"></i>
-        <h3 class="text-lg font-medium text-stone-200">No hay ningún cliente seleccionado</h3>
-        <p class="text-sm mt-1">Buscá un cliente a la izquierda o creá uno nuevo para ver su saldo y movimientos.</p>
-      </div>
-
-      <div id="vistaCliente" class="hidden space-y-6">
-        <div class="card-dark p-5 rounded-xl shadow-md relative">
-          <div class="flex flex-wrap justify-between items-start gap-4 mb-4">
-            <div>
-              <span class="text-xs font-semibold text-amber-400 uppercase tracking-wider">Ficha de Cliente</span>
-              <h2 id="clienteNombre" class="text-2xl font-bold text-white mt-0.5"></h2>
-              <p id="clienteTel" class="text-sm text-stone-300 mt-1"><i class="fas fa-phone mr-1"></i> <span></span></p>
-              <p id="clienteNotas" class="text-xs text-stone-400 mt-1 italic"></p>
-            </div>
-
-            <div class="card-inner p-4 rounded-xl border border-stone-700 text-right min-w-[200px]">
-              <span class="text-xs text-stone-400 block font-medium">SALDO PENDIENTE TOTAL</span>
-              <span id="clienteSaldo" class="text-3xl font-extrabold block my-0.5"></span>
-              <span id="estadoBadge" class="text-[10px] px-2 py-0.5 rounded font-bold inline-block"></span>
-            </div>
-          </div>
-
-          <div class="flex flex-wrap gap-2 pt-3 border-t border-stone-700/60">
-            <button onclick="abrirModalMovimiento('DEUDA')" class="bg-rose-700 hover:bg-rose-800 text-white text-sm px-4 py-2 rounded-lg font-medium transition flex items-center gap-1.5">
-              <i class="fas fa-plus-circle"></i> + Agregar Compra / Corte (Debe)
-            </button>
-            <button onclick="abrirModalMovimiento('PAGO')" class="bg-emerald-700 hover:bg-emerald-800 text-white text-sm px-4 py-2 rounded-lg font-medium transition flex items-center gap-1.5">
-              <i class="fas fa-hand-holding-usd"></i> + Registrar Entrega / Pago (Haber)
-            </button>
-          </div>
-        </div>
-
-        <div class="card-dark p-5 rounded-xl shadow-md">
-          <h3 class="font-bold text-stone-200 mb-4 flex items-center gap-2">
-            <i class="fas fa-history text-stone-400"></i> Historial de Movimientos
-          </h3>
-
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-              <thead class="text-xs uppercase bg-stone-900/50 text-stone-400 border-b border-stone-700">
-                <tr>
-                  <th class="py-2.5 px-3">Fecha</th>
-                  <th class="py-2.5 px-3">Tipo / Detalle / Orden</th>
-                  <th class="py-2.5 px-3 text-right">Monto</th>
-                  <th class="py-2.5 px-3 text-center">Acción</th>
-                </tr>
-              </thead>
-              <tbody id="tablaMovimientos" class="divide-y divide-stone-700/50"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- MODAL: CLIENTE -->
-  <div id="modalCliente" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
-    <div class="card-dark p-6 rounded-xl max-w-md w-full shadow-2xl">
-      <h3 class="text-lg font-bold text-stone-100 mb-4" id="modalClienteTitulo">Nuevo Cliente</h3>
-      <form id="formCliente" onsubmit="guardarCliente(event)" class="space-y-4">
-        <input type="hidden" id="clienteId">
-        <div>
-          <label class="block text-xs font-medium text-stone-300 mb-1">Nombre Completo *</label>
-          <input type="text" id="inputNombre" required placeholder="Ej: Juan Pérez" class="w-full px-3 py-2 rounded-lg text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-stone-300 mb-1">Teléfono (opcional)</label>
-          <input type="text" id="inputTelefono" placeholder="Ej: 11 1234 5678" class="w-full px-3 py-2 rounded-lg text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-stone-300 mb-1">Notas / Observaciones (opcional)</label>
-          <textarea id="inputNotas" rows="2" placeholder="Ej: Medidas habituales" class="w-full px-3 py-2 rounded-lg text-sm"></textarea>
-        </div>
-        <div class="flex justify-end gap-2 pt-2">
-          <button type="button" onclick="cerrarModales()" class="px-4 py-2 text-xs text-stone-300 hover:text-white">Cancelar</button>
-          <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold">Guardar Cliente</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL: MOVIMIENTO (DENTRO DE FICHA DE CLIENTE) -->
-  <div id="modalMovimiento" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
-    <div class="card-dark p-6 rounded-xl max-w-md w-full shadow-2xl">
-      <h3 class="text-lg font-bold text-stone-100 mb-4" id="modalMovimientoTitulo">Registrar Movimiento</h3>
-      <form id="formMovimiento" onsubmit="guardarMovimiento(event)" class="space-y-4">
-        <input type="hidden" id="movimientoTipo">
-        <div>
-          <label class="block text-xs font-medium text-stone-300 mb-1">Fecha * (Editable)</label>
-          <input type="date" id="inputFecha" required class="w-full px-3 py-2 rounded-lg text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-stone-300 mb-1">Monto ($) *</label>
-          <input type="number" step="0.01" min="0" id="inputMonto" required placeholder="0.00" class="w-full px-3 py-2 rounded-lg text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-stone-300 mb-1">Detalle / Concepto (opcional)</label>
-          <input type="text" id="inputDetalle" placeholder="Ej: Recorte chapa 2mm a medida" class="w-full px-3 py-2 rounded-lg text-sm">
-        </div>
-
-        <div id="seccionOpcionesCompra" class="space-y-3 pt-2 border-t border-stone-800">
-          <div>
-            <label class="block text-xs font-medium text-stone-300 mb-1">Método de Pago (opcional)</label>
-            <select id="inputMetodoPago" class="w-full px-3 py-2 rounded-lg text-sm">
-              <option value="">Seleccionar método...</option>
-              <option value="Efectivo">Efectivo</option>
-              <option value="Transferencia">Transferencia</option>
-              <option value="Mercado Pago">Mercado Pago</option>
-              <option value="Otro">Otro</option>
-            </select>
-          </div>
-          <div class="flex items-center gap-2 bg-stone-900/60 p-2.5 rounded-lg border border-stone-800">
-            <input type="checkbox" id="checkPagadoActo" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500">
-            <label for="checkPagadoActo" class="text-xs font-medium text-stone-200 cursor-pointer">¿El cliente ya pagó esta compra en el acto?</label>
-          </div>
-        </div>
-
-        <div class="flex justify-end gap-2 pt-2">
-          <button type="button" onclick="cerrarModales()" class="px-4 py-2 text-xs text-stone-300 hover:text-white">Cancelar</button>
-          <button type="submit" id="btnGuardarMovimiento" class="px-4 py-2 rounded-lg text-xs font-bold text-white">Guardar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL: AGREGAR COMPRA GENERAL (DESDE EL ENCABEZADO) CON OPCIÓN DE VENTA AL PASO Y CREAR CLIENTE -->
-  <div id="modalCompraGeneral" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
-    <div class="card-dark p-6 rounded-xl max-w-md w-full shadow-2xl">
-      <h3 class="text-lg font-bold text-stone-100 mb-4"><i class="fas fa-plus-circle text-rose-500 mr-2"></i> Agregar Compra / Venta Rápida</h3>
-      <form id="formCompraGeneral" onsubmit="guardarCompraGeneral(event)" class="space-y-4">
-        <div>
-          <label class="block text-xs font-medium text-stone-300 mb-1">Seleccionar Cliente *</label>
-          <select id="selectClienteGeneral" onchange="verificarOpcionCliente(this.value)" required class="w-full px-3 py-2 rounded-lg text-sm">
-            <option value="">Cargando clientes...</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-stone-300 mb-1">Fecha * (Editable)</label>
-          <input type="date" id="inputFechaGen" required class="w-full px-3 py-2 rounded-lg text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-stone-300 mb-1">Monto ($) *</label>
-          <input type="number" step="0.01" min="0" id="inputMontoGen" required placeholder="0.00" class="w-full px-3 py-2 rounded-lg text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-stone-300 mb-1">Detalle / Concepto (opcional)</label>
-          <input type="text" id="inputDetalleGen" placeholder="Ej: Recorte chapa a medida" class="w-full px-3 py-2 rounded-lg text-sm">
-        </div>
-        <div class="space-y-3 pt-2 border-t border-stone-800">
-          <div>
-            <label class="block text-xs font-medium text-stone-300 mb-1">Método de Pago (opcional)</label>
-            <select id="inputMetodoPagoGen" class="w-full px-3 py-2 rounded-lg text-sm">
-              <option value="">Seleccionar método...</option>
-              <option value="Efectivo">Efectivo</option>
-              <option value="Transferencia">Transferencia</option>
-              <option value="Mercado Pago">Mercado Pago</option>
-              <option value="Otro">Otro</option>
-            </select>
-          </div>
-          <div class="flex items-center gap-2 bg-stone-900/60 p-2.5 rounded-lg border border-stone-800">
-            <input type="checkbox" id="checkPagadoActoGen" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500">
-            <label for="checkPagadoActoGen" class="text-xs font-medium text-stone-200 cursor-pointer">¿El cliente ya pagó esta compra en el acto?</label>
-          </div>
-        </div>
-        <div class="flex justify-end gap-2 pt-2">
-          <button type="button" onclick="cerrarModales()" class="px-4 py-2 text-xs text-stone-300 hover:text-white">Cancelar</button>
-          <button type="submit" class="btn-violeta px-4 py-2 rounded-lg text-xs font-bold text-white">Guardar Compra</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOTH7RDwe3miTCuB3_CHHK95rr4Gsy3fyeBXhY2l5hnwdh8vmvnL3I8nqFhs26QVPO/exec';
-
-    let clientes = [];
-    let clienteSeleccionadoId = null;
-    let filtroCajaModo = 'HOY';
-
-    async function inicializarDatos() {
-      const icono = document.getElementById('iconoSync');
-      const texto = document.getElementById('textoSync');
-      if(icono) icono.classList.remove('hidden');
-      if(texto) texto.innerText = 'Cargando...';
-
-      try {
-        const respuesta = await fetch(APPS_SCRIPT_URL);
-        const resultado = await respuesta.json();
-        
-        if (resultado.status === 'success' && resultado.registros) {
-          clientes = agruparRegistrosEnClientes(resultado.registros);
-          if(texto) texto.innerText = 'Sincronizado';
-        }
-      } catch (e) {
-        clientes = JSON.parse(localStorage.getItem('metalcof_clientes')) || [];
-        if(texto) texto.innerText = 'Modo Offline';
-      } finally {
-        if(icono) icono.classList.add('hidden');
-        actualizarBalanceGlobal();
-        calcularCajaDiaria();
-        if(!document.getElementById('seccionClientes').classList.contains('hidden')) {
-          renderizarClientes();
-        }
-      }
-    }
-
-    function agruparRegistrosEnClientes(registros) {
-      let mapaClientes = {};
-      
-      registros.forEach(r => {
-        if (!r.cliente) return;
-        if (!mapaClientes[r.cliente]) {
-          mapaClientes[r.cliente] = {
-            id: 'cli_' + encodeURIComponent(r.cliente),
-            nombre: r.cliente,
-            telefono: r.telefono || '',
-            notas: r.notas || '',
-            movimientos: []
-          };
-        }
-        
-        if (r.fecha && r.tipo && r.monto !== '') {
-          mapaClientes[r.cliente].movimientos.push({
-            id: r.idMov || ('mov_' + Math.random().toString(36).substr(2, 9)),
-            tipo: r.tipo,
-            fecha: r.fecha,
-            detalle: r.detalle,
-            metodoPago: r.metodoPago || '',
-            monto: Number(r.monto)
-          });
-        }
-      });
-
-      return Object.values(mapaClientes);
-    }
-
-    function obtenerTodasLasVentasOrdenadas() {
-      let todasLasVentas = [];
-      clientes.forEach(c => {
-        if (c.movimientos) {
-          c.movimientos.forEach(m => {
-            if (m.tipo === 'DEUDA') {
-              todasLasVentas.push({ ...m, clienteNombre: c.nombre });
-            }
-          });
-        }
-      });
-      todasLasVentas.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-      return todasLasVentas;
-    }
-
-    function formatearMoneda(monto) {
-      return '$' + Number(monto || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-
-    function irInicio() {
-      document.getElementById('seccionInicio').classList.remove('hidden');
-      document.getElementById('seccionClientes').classList.add('hidden');
-      document.getElementById('seccionClientes').classList.remove('grid');
-      actualizarBalanceGlobal();
-    }
-
-    function irClientes() {
-      document.getElementById('seccionInicio').classList.add('hidden');
-      document.getElementById('seccionClientes').classList.remove('hidden');
-      document.getElementById('seccionClientes').classList.add('grid');
-      renderizarClientes();
-    }
-
-    function actualizarBalanceGlobal() {
-      let deudaTotal = 0;
-      let ingresosMes = 0;
-      let ventasMes = 0;
-      let cantVentasMes = 0;
-      
-      const hoy = new Date().toISOString().split('T')[0];
-      const mesActual = hoy.substring(0, 7);
-
-      clientes.forEach(c => {
-        deudaTotal += calcularSaldo(c.id);
-        if (c.movimientos) {
-          c.movimientos.forEach(m => {
-            if (m.fecha && m.fecha.startsWith(mesActual)) {
-              if (m.tipo === 'PAGO') ingresosMes += m.monto;
-              if (m.tipo === 'DEUDA') {
-                ventasMes += m.monto;
-                cantVentasMes++;
-              }
-            }
-          });
-        }
-      });
-
-      document.getElementById('globalDeudaTotal').innerText = formatearMoneda(deudaTotal);
-      document.getElementById('globalIngresosMes').innerText = formatearMoneda(ingresosMes);
-      document.getElementById('globalVentasMes').innerText = formatearMoneda(ventasMes);
-      document.getElementById('globalCantVentasMes').innerText = cantVentasMes;
-    }
-
-    function guardarEnStorage() {
-      localStorage.setItem('metalcof_clientes', JSON.stringify(clientes));
-      sincronizarConGoogleSheets();
-      calcularCajaDiaria();
-      actualizarBalanceGlobal();
-    }
-
-    async function sincronizarConGoogleSheets() {
-      if (!APPS_SCRIPT_URL) return;
-
-      const icono = document.getElementById('iconoSync');
-      const texto = document.getElementById('textoSync');
-      if(icono) icono.classList.remove('hidden');
-      if(texto) texto.innerText = 'Sincronizando...';
-
-      let registros = [];
-      clientes.forEach(c => {
-        if (!c.movimientos || c.movimientos.length === 0) {
-          registros.push({ cliente: c.nombre, telefono: c.telefono || '', notas: c.notas || '', fecha: '', tipo: '', detalle: '', metodoPago: '', monto: '', idMov: '' });
-        } else {
-          c.movimientos.forEach(m => {
-            registros.push({ 
-              cliente: c.nombre, 
-              telefono: c.telefono || '', 
-              notas: c.notas || '', 
-              fecha: m.fecha, 
-              tipo: m.tipo, 
-              detalle: m.detalle || '', 
-              metodoPago: m.metodoPago || '', 
-              monto: m.monto,
-              idMov: m.id || ''
-            });
-          });
-        }
-      });
-
-      try {
-        await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ registros: registros })
-        });
-        if(texto) texto.innerText = 'Sincronizado';
-      } catch (e) {
-        if(texto) texto.innerText = 'Error Sync';
-      } finally {
-        if(icono) icono.classList.add('hidden');
-      }
-    }
-
-    function cambiarFiltroCaja(modo) {
-      filtroCajaModo = modo;
-      const btnHoy = document.getElementById('btnFiltroHoy');
-      const btnMes = document.getElementById('btnFiltroMes');
-
-      if (modo === 'HOY') {
-        btnHoy.className = "flex-1 text-xs py-1.5 rounded-md font-bold transition bg-amber-600 text-white";
-        btnMes.className = "flex-1 text-xs py-1.5 rounded-md font-medium text-stone-400 hover:text-white transition";
-      } else {
-        btnMes.className = "flex-1 text-xs py-1.5 rounded-md font-bold transition bg-amber-600 text-white";
-        btnHoy.className = "flex-1 text-xs py-1.5 rounded-md font-medium text-stone-400 hover:text-white transition";
-      }
-      calcularCajaDiaria();
-    }
-
-    function calcularCajaDiaria() {
-      const hoy = new Date().toISOString().split('T')[0];
-      const mesActual = hoy.substring(0, 7);
-
-      let totalIngresos = 0;
-      let totalVentas = 0;
-
-      clientes.forEach(c => {
-        if (c.movimientos) {
-          c.movimientos.forEach(m => {
-            const coincide = filtroCajaModo === 'HOY' ? m.fecha === hoy : m.fecha.startsWith(mesActual);
-            if (coincide) {
-              if (m.tipo === 'PAGO') totalIngresos += m.monto;
-              if (m.tipo === 'DEUDA') totalVentas += m.monto;
-            }
-          });
-        }
-      });
-
-      document.getElementById('cajaIngresos').innerText = formatearMoneda(totalIngresos);
-      document.getElementById('cajaVentas').innerText = formatearMoneda(totalVentas);
-    }
-
-    function renderizarClientes(filtro = '') {
-      const contenedor = document.getElementById('listaClientes');
-      if(!contenedor) return;
-      contenedor.innerHTML = '';
-      const filtrados = clientes.filter(c => c.nombre.toLowerCase().includes(filtro.toLowerCase()));
-
-      if (filtrados.length === 0) {
-        contenedor.innerHTML = `<div class="p-4 text-center text-xs text-stone-400 bg-stone-900/40 rounded-lg border border-dashed border-stone-700">${filtro ? 'No se encontró ningún cliente.' : 'No hay clientes registrados.'}</div>`;
-        return;
-      }
-
-      filtrados.forEach(c => {
-        const saldo = calcularSaldo(c.id);
-        const esSeleccionado = c.id === clienteSeleccionadoId;
-        const div = document.createElement('div');
-        div.onclick = () => seleccionarCliente(c.id);
-        div.className = `p-3 rounded-lg cursor-pointer transition flex justify-between items-center ${esSeleccionado ? 'bg-amber-900/40 border border-amber-600/60' : 'bg-stone-800/60 hover:bg-stone-800 border border-transparent'}`;
-        
-        div.innerHTML = `
-          <div>
-            <p class="font-bold text-sm text-stone-100">${escapeHtml(c.nombre)}</p>
-            <p class="text-xs text-stone-400">${c.telefono ? '<i class="fas fa-phone mr-1"></i>' + escapeHtml(c.telefono) : 'Sin teléfono'}</p>
-          </div>
-          <div class="text-right">
-            <span class="text-xs font-bold ${saldo > 0 ? 'text-rose-400' : 'text-emerald-400'}">${formatearMoneda(saldo)}</span>
-          </div>
-        `;
-        contenedor.appendChild(div);
-      });
-    }
-
-    function calcularSaldo(clienteId) {
-      const cliente = clientes.find(c => c.id === clienteId);
-      if (!cliente || !cliente.movimientos) return 0;
-      return cliente.movimientos.reduce((acc, mov) => mov.tipo === 'DEUDA' ? acc + mov.monto : acc - mov.monto, 0);
-    }
-
-    function seleccionarCliente(id) {
-      clienteSeleccionadoId = id;
-      renderizarClientes(document.getElementById('inputBuscar').value);
-      const cliente = clientes.find(c => c.id === id);
-      if (!cliente) return;
-
-      document.getElementById('vistaVacia').classList.add('hidden');
-      document.getElementById('vistaCliente').classList.remove('hidden');
-      document.getElementById('clienteNombre').innerText = cliente.nombre;
-      
-      const elTel = document.getElementById('clienteTel');
-      if (cliente.telefono) {
-        elTel.querySelector('span').innerText = cliente.telefono;
-        elTel.classList.remove('hidden');
-      } else {
-        elTel.classList.add('hidden');
-      }
-
-      document.getElementById('clienteNotas').innerText = cliente.notas ? `"${cliente.notas}"` : '';
-
-      const saldo = calcularSaldo(id);
-      const elSaldo = document.getElementById('clienteSaldo');
-      const elBadge = document.getElementById('estadoBadge');
-      elSaldo.innerText = formatearMoneda(saldo);
-
-      if (saldo > 0) {
-        elSaldo.className = "text-3xl font-extrabold block my-0.5 text-rose-500";
-        elBadge.innerText = "DEBE DINERO";
-        elBadge.className = "text-[10px] px-2 py-0.5 rounded font-bold inline-block bg-rose-950 text-rose-300 border border-rose-800";
-      } else if (saldo === 0) {
-        elSaldo.className = "text-3xl font-extrabold block my-0.5 text-emerald-400";
-        elBadge.innerText = "AL DÍA";
-        elBadge.className = "text-[10px] px-2 py-0.5 rounded font-bold inline-block bg-emerald-950 text-emerald-300 border border-emerald-800";
-      } else {
-        elSaldo.className = "text-3xl font-extrabold block my-0.5 text-sky-400";
-        elBadge.innerText = "SALDO A FAVOR";
-        elBadge.className = "text-[10px] px-2 py-0.5 rounded font-bold inline-block bg-sky-950 text-sky-300 border border-sky-800";
-      }
-
-      renderizarMovimientos(cliente);
-    }
-
-    function renderizarMovimientos(cliente) {
-      const tbody = document.getElementById('tablaMovimientos');
-      tbody.innerHTML = '';
-      if (!cliente.movimientos || cliente.movimientos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-stone-500 text-xs">Sin movimientos registrados aún.</td></tr>`;
-        return;
-      }
-
-      const todasVentas = obtenerTodasLasVentasOrdenadas();
-      const ordenados = [...cliente.movimientos].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
-      
-      ordenados.forEach(mov => {
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-stone-800/40";
-        const esDeuda = mov.tipo === 'DEUDA';
-        
-        let etiquetaOrden = '';
-        if (esDeuda) {
-          const indexVenta = todasVentas.findIndex(v => v.id === mov.id);
-          if (indexVenta !== -1) {
-            etiquetaOrden = `<span class="text-xs text-amber-400 font-bold mr-1">[Ord #${indexVenta + 1}]</span>`;
-          }
-        } else if (mov.id && mov.id.endsWith('_pago')) {
-          const idDeudaOriginal = mov.id.replace('_pago', '');
-          const indexVenta = todasVentas.findIndex(v => v.id === idDeudaOriginal);
-          if (indexVenta !== -1) {
-            etiquetaOrden = `<span class="text-xs text-amber-400 font-bold mr-1">[Ord #${indexVenta + 1}]</span>`;
-          }
-        }
-
-        let detalleTexto = `${etiquetaOrden}${escapeHtml(mov.detalle || '-')}`;
-        if (mov.metodoPago) {
-          detalleTexto += ` <span class="text-[10px] bg-stone-700 px-1.5 py-0.5 rounded text-stone-300 ml-1"><i class="fas fa-wallet mr-0.5"></i>${escapeHtml(mov.metodoPago)}</span>`;
-        }
-
-        tr.innerHTML = `
-          <td class="py-3 px-3 text-xs text-stone-300 whitespace-nowrap">${mov.fecha}</td>
-          <td class="py-3 px-3">
-            <span class="text-xs font-semibold px-2 py-0.5 rounded ${esDeuda ? 'bg-rose-950 text-rose-300' : 'bg-emerald-950 text-emerald-300'}">${esDeuda ? 'Compra / Corte' : 'Entrega / Pago'}</span>
-            <p class="text-xs text-stone-300 mt-0.5">${detalleTexto}</p>
-          </td>
-          <td class="py-3 px-3 text-right font-bold text-sm ${esDeuda ? 'text-rose-400' : 'text-emerald-400'}">${esDeuda ? '+' : '-'}${formatearMoneda(mov.monto)}</td>
-          <td class="py-3 px-3 text-center">
-            <button onclick="eliminarMovimiento('${mov.id}')" class="text-stone-500 hover:text-rose-400 text-xs px-2 py-1" title="Eliminar"><i class="fas fa-trash"></i></button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function abrirModalCliente() {
-      document.getElementById('clienteId').value = '';
-      document.getElementById('formCliente').reset();
-      document.getElementById('modalClienteTitulo').innerText = 'Nuevo Cliente';
-      document.getElementById('modalCliente').classList.remove('hidden');
-      document.getElementById('modalCliente').classList.add('flex');
-    }
-
-    function guardarCliente(e) {
-      e.preventDefault();
-      const nombre = document.getElementById('inputNombre').value.trim();
-      const telefono = document.getElementById('inputTelefono').value.trim();
-      const notas = document.getElementById('inputNotas').value.trim();
-      if (!nombre) return;
-
-      const nuevoCliente = { id: 'cli_' + Date.now(), nombre, telefono, notas, movimientos: [] };
-      clientes.push(nuevoCliente);
-      guardarEnStorage();
-      cerrarModales();
-      renderizarClientes();
-      seleccionarCliente(nuevoCliente.id);
-    }
-
-    function abrirModalMovimiento(tipo) {
-      if (!clienteSeleccionadoId) return;
-      document.getElementById('formMovimiento').reset();
-      const hoy = new Date().toISOString().split('T')[0];
-      document.getElementById('inputFecha').value = hoy;
-      document.getElementById('movimientoTipo').value = tipo;
-      
-      const titulo = document.getElementById('modalMovimientoTitulo');
-      const btn = document.getElementById('btnGuardarMovimiento');
-      const seccionOpcionesCompra = document.getElementById('seccionOpcionesCompra');
-
-      if (tipo === 'DEUDA') {
-        titulo.innerText = 'Registrar Compra / Corte (Debe)';
-        btn.className = 'bg-rose-700 hover:bg-rose-800 px-4 py-2 rounded-lg text-xs font-bold text-white';
-        seccionOpcionesCompra.classList.remove('hidden');
-      } else {
-        titulo.innerText = 'Registrar Entrega / Pago (Haber)';
-        btn.className = 'bg-emerald-700 hover:bg-emerald-800 px-4 py-2 rounded-lg text-xs font-bold text-white';
-        seccionOpcionesCompra.classList.add('hidden');
-      }
-
-      document.getElementById('modalMovimiento').classList.remove('hidden');
-      document.getElementById('modalMovimiento').classList.add('flex');
-    }
-
-    function guardarMovimiento(e) {
-      e.preventDefault();
-      const cliente = clientes.find(c => c.id === clienteSeleccionadoId);
-      if (!cliente) return;
-
-      const tipo = document.getElementById('movimientoTipo').value;
-      const fecha = document.getElementById('inputFecha').value;
-      const monto = parseFloat(document.getElementById('inputMonto').value);
-      const detalle = document.getElementById('inputDetalle').value.trim();
-      const metodoPago = document.getElementById('inputMetodoPago').value;
-      const pagadoEnActo = document.getElementById('checkPagadoActo').checked;
-
-      if (!fecha || isNaN(monto) || monto <= 0) return;
-
-      const idUnicoBase = 'mov_' + Date.now();
-      
-      if (tipo === 'DEUDA') {
-        cliente.movimientos.push({ 
-          id: idUnicoBase, 
-          tipo: 'DEUDA', 
-          fecha, 
-          monto, 
-          detalle,
-          metodoPago 
-        });
-
-        if (pagadoEnActo) {
-          cliente.movimientos.push({
-            id: idUnicoBase + '_pago',
-            tipo: 'PAGO',
-            fecha,
-            monto,
-            detalle: 'Pago en el acto' + (detalle ? ` (${detalle})` : ''),
-            metodoPago
-          });
-        }
-      } else {
-        cliente.movimientos.push({
-          id: idUnicoBase,
-          tipo: 'PAGO',
-          fecha,
-          monto,
-          detalle: detalle || 'Entrega / Pago a cuenta',
-          metodoPago: ''
-        });
-      }
-
-      guardarEnStorage();
-      cerrarModales();
-      seleccionarCliente(clienteSeleccionadoId);
-    }
-
-    function abrirModalCompraGeneral() {
-      actualizarSelectClientesGeneral();
-      document.getElementById('formCompraGeneral').reset();
-      const hoy = new Date().toISOString().split('T')[0];
-      document.getElementById('inputFechaGen').value = hoy;
-
-      document.getElementById('modalCompraGeneral').classList.remove('hidden');
-      document.getElementById('modalCompraGeneral').classList.add('flex');
-    }
-
-    function actualizarSelectClientesGeneral() {
-      const select = document.getElementById('selectClienteGeneral');
-      select.innerHTML = '';
-      
-      const optPaso = document.createElement('option');
-      optPaso.value = 'VENTA_AL_PASO';
-      optPaso.innerText = '👤 [ Venta al Paso / Mostrador ]';
-      select.appendChild(optPaso);
-
-      const optSep = document.createElement('option');
-      optSep.disabled = true;
-      optSep.innerText = '-----------------------------------';
-      select.appendChild(optSep);
-
-      clientes.sort((a,b) => a.nombre.localeCompare(b.nombre)).forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.id;
-        opt.innerText = c.nombre;
-        select.appendChild(opt);
-      });
-
-      const optNuevo = document.createElement('option');
-      optNuevo.value = 'CREAR_NUEVO';
-      optNuevo.innerText = '+ [ Crear nuevo cliente... ]';
-      select.appendChild(optNuevo);
-    }
-
-    function verificarOpcionCliente(valor) {
-      if (valor === 'CREAR_NUEVO') {
-        const nombreNuevo = prompt('Ingrese el nombre y apellido del nuevo cliente:');
-        if (nombreNuevo && nombreNuevo.trim() !== '') {
-          const nuevoCliente = { id: 'cli_' + Date.now(), nombre: nombreNuevo.trim(), telefono: '', notas: '', movimientos: [] };
-          clientes.push(nuevoCliente);
-          guardarEnStorage();
-          actualizarSelectClientesGeneral();
-          document.getElementById('selectClienteGeneral').value = nuevoCliente.id;
-        } else {
-          document.getElementById('selectClienteGeneral').value = '';
-        }
-      }
-    }
-
-    function guardarCompraGeneral(e) {
-      e.preventDefault();
-      const clienteId = document.getElementById('selectClienteGeneral').value;
-      if (!clienteId) return;
-
-      let cliente;
-      if (clienteId === 'VENTA_AL_PASO') {
-        let clientePaso = clientes.find(c => c.nombre === 'Venta al Paso');
-        if (!clientePaso) {
-          clientePaso = { id: 'cli_mostrador', nombre: 'Venta al Paso', telefono: '', notas: 'Clientes mostrador / anónimos', movimientos: [] };
-          clientes.push(clientePaso);
-        }
-        cliente = clientePaso;
-      } else {
-        cliente = clientes.find(c => c.id === clienteId);
-      }
-
-      if (!cliente) return;
-
-      const fecha = document.getElementById('inputFechaGen').value;
-      const monto = parseFloat(document.getElementById('inputMontoGen').value);
-      const detalle = document.getElementById('inputDetalleGen').value.trim();
-      const metodoPago = document.getElementById('inputMetodoPagoGen').value;
-      let pagadoEnActo = document.getElementById('checkPagadoActoGen').checked;
-
-      if (clienteId === 'VENTA_AL_PASO') {
-        pagadoEnActo = true;
-      }
-
-      if (!fecha || isNaN(monto) || monto <= 0) return;
-
-      const idUnicoBase = 'mov_' + Date.now();
-
-      cliente.movimientos.push({
-        id: idUnicoBase,
-        tipo: 'DEUDA',
-        fecha,
-        monto,
-        detalle: (clienteId === 'VENTA_AL_PASO' ? 'Venta al paso - ' : '') + (detalle || 'Recorte estándar'),
-        metodoPago: metodoPago || 'Efectivo'
-      });
-
-      if (pagadoEnActo) {
-        cliente.movimientos.push({
-          id: idUnicoBase + '_pago',
-          tipo: 'PAGO',
-          fecha,
-          monto,
-          detalle: 'Pago en el acto',
-          metodoPago: metodoPago || 'Efectivo'
-        });
-      }
-
-      guardarEnStorage();
-      cerrarModales();
-      
-      if (!document.getElementById('seccionClientes').classList.contains('hidden')) {
-        seleccionarCliente(cliente.id);
-      }
-    }
-
-    function eliminarMovimiento(movId) {
-      const cliente = clientes.find(c => c.id === clienteSeleccionadoId);
-      if (!cliente) return;
-      if (confirm('¿Estás segura de eliminar este movimiento?')) {
-        let baseId = movId.replace('_pago', '');
-        cliente.movimientos = cliente.movimientos.filter(m => m.id !== baseId && m.id !== (baseId + '_pago'));
-        guardarEnStorage();
-        seleccionarCliente(clienteSeleccionadoId);
-      }
-    }
-
-    function cerrarModales() {
-      document.querySelectorAll('#modalCliente, #modalMovimiento, #modalCompraGeneral').forEach(m => {
-        m.classList.add('hidden');
-        m.classList.remove('flex');
-      });
-    }
-
-    function filtrarClientes() {
-      renderizarClientes(document.getElementById('inputBuscar').value);
-    }
-
-    function exportarCSV() {
-      if (clientes.length === 0) {
-        alert('No hay clientes ni datos para exportar.');
-        return;
-      }
-      let csv = 'Cliente;Telefono;Notas;Fecha Movimiento;Tipo;Detalle;MetodoPago;Monto;IDMov\n';
-      clientes.forEach(c => {
-        if (!c.movimientos || c.movimientos.length === 0) {
-          csv += `"${c.nombre}";"${c.telefono || ''}";"${c.notas || ''}";"";"";"";"";"";""\n`;
-        } else {
-          c.movimientos.forEach(m => {
-            csv += `"${c.nombre}";"${c.telefono || ''}";"${c.notas || ''}";"${m.fecha}";"${m.tipo}";"${m.detalle || ''}";"${m.metodoPago || ''}";"${m.monto}";"${m.id || ''}"\n`;
-          });
-        }
-      });
-      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `METALCOF_Respaldo_${new Date().toISOString().split('T')[0]}.csv`;
-      link.click();
-    }
-
-    function escapeHtml(text) {
-      if (!text) return '';
-      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-    }
-
-    // Inicializar app leyendo desde Sheets
-    inicializarDatos();
-  </script>
-</body>
-</html>
+<!DOCTYPE html><html lang="es"><head>  <meta charset="UTF-8">  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>METALCOF - Cuenta Corriente de Clientes</title>  <script src="https://cdn.tailwindcss.com"></script>  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">  <style>    body {      background-color: #523f39;      color: #ffffff;      font-family: system-ui, -apple-system, sans-serif;    }    .card-dark {      background-color: #362925;      border: 1px solid #483732;    }    .card-inner {      background-color: #2a1f1c;    }    input, select, textarea {      background-color: #2a1f1c !important;      border: 1px solid #5a4640 !important;      color: #ffffff !important;    }    input:focus, select:focus, textarea:focus {      outline: none;      border-color: #e53e3e !important;      box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.2);    }    .btn-violeta {      background-color: #805AD5;    }    .btn-violeta:hover {      background-color: #6B46C1;    }  </style></head><body class="min-h-screen pb-12">  <!-- ENCABEZADO --><header class="card-dark border-b border-stone-700 shadow-md">    <div class="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">      <div class="flex items-center gap-3 cursor-pointer" onclick="irInicio()">        <!-- Logo METALCOF Vectorial -->        <svg class="w-12 h-12 flex-shrink-0" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">          <polygon points="110,35 190,35 170,65 130,65" fill="#E53E3E"/>          <polygon points="205,45 255,115 230,132 185,72" fill="#DD6B20"/>          <polygon points="255,185 205,255 185,228 230,168" fill="#D53F8C"/>          <polygon points="190,265 110,265 130,235 170,235" fill="#38A169"/>          <polygon points="95,255 45,185 70,168 115,228" fill="#3182CE"/>          <polygon points="45,115 95,45 115,72 70,132" fill="#805AD5"/>          <g fill="#FFFFFF">            <path d="M 90,85 L 122,85 L 150,140 L 178,85 L 210,85 L 210,215 L 180,215 L 180,130 L 158,175 L 142,175 L 120,130 L 120,215 L 90,215 Z"/>            <text x="150" y="165" font-family="Arial, sans-serif" font-weight="900" font-size="22" letter-spacing="4" text-anchor="middle" fill="#2a1f1c">METALCOF</text>          </g>        </svg>        <div>          <h1 class="text-xl font-bold tracking-wider text-white">METALCOF</h1>          <p class="text-xs text-stone-300">Gestión de Cuentas Corrientes y Clientes</p>        </div>      </div>      <div class="flex items-center gap-2 flex-wrap">        <button onclick="abrirModalCompraGeneral()" class="btn-violeta text-white px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-md">          <i class="fas fa-plus-circle"></i> Agregar Compra        </button>        <button onclick="irInicio()" class="bg-stone-700 hover:bg-stone-600 text-white px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1.5">          <i class="fas fa-home"></i> Inicio        </button>        <span id="indicadorSheets" class="text-xs px-2.5 py-1 rounded bg-stone-800 text-stone-400 border border-stone-700 hidden sm:flex items-center gap-1.5">          <i class="fas fa-sync-alt animate-spin hidden" id="iconoSync"></i>          <span id="textoSync">Sincronizado</span>        </span>        <button onclick="exportarCSV()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-2">          <i class="fas fa-file-excel"></i> Copia (Excel)        </button>      </div>    </div></header>  <!-- VISTA 1: INICIO / BALANCE GLOBAL --><main id="seccionInicio" class="max-w-6xl mx-auto px-4 mt-8 space-y-6">    <div class="card-dark p-6 rounded-2xl shadow-xl border-t-4 border-t-amber-500">      <h2 class="text-xl font-bold text-white mb-2"><i class="fas fa-chart-pie text-amber-400 mr-2"></i> Balance Global del Negocio</h2>      <p class="text-xs text-stone-400 mb-6">Resumen general del estado financiero de Metalcof en tiempo real.</p>      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">        <div class="card-inner p-4 rounded-xl border border-stone-800">          <span class="text-xs text-stone-400 block font-medium">DEUDA TOTAL (En la calle)</span>          <span id="globalDeudaTotal" class="text-2xl font-extrabold text-rose-500 block mt-1">$0,00</span>          <span class="text-[10px] text-stone-500 mt-1 block">Saldos pendientes de cobro</span>        </div>        <div class="card-inner p-4 rounded-xl border border-stone-800">          <span class="text-xs text-stone-400 block font-medium">INGRESOS (Este Mes)</span>          <span id="globalIngresosMes" class="text-2xl font-extrabold text-emerald-400 block mt-1">$0,00</span>          <span class="text-[10px] text-stone-500 mt-1 block">Pagos recibidos en el mes</span>        </div>        <div class="card-inner p-4 rounded-xl border border-stone-800">          <span class="text-xs text-stone-400 block font-medium">VENTAS (Este Mes)</span>          <span id="globalVentasMes" class="text-2xl font-extrabold text-amber-400 block mt-1">$0,00</span>          <span class="text-[10px] text-stone-500 mt-1 block">Volumen facturado en el mes</span>        </div>        <div class="card-inner p-4 rounded-xl border border-stone-800">          <span class="text-xs text-stone-400 block font-medium">CANTIDAD DE VENTAS (Mes)</span>          <span id="globalCantVentasMes" class="text-2xl font-extrabold text-violet-400 block mt-1">0</span>          <span class="text-[10px] text-stone-500 mt-1 block">Cortes realizados en el mes</span>        </div>      </div>    </div>    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">      <div class="card-dark p-6 rounded-2xl shadow-xl flex flex-col justify-between">        <div>          <h3 class="font-bold text-white text-base mb-2"><i class="fas fa-users text-amber-400 mr-2"></i> Gestión de Clientes y Cuentas</h3>          <p class="text-xs text-stone-300 mb-4">Buscá clientes, revisá fichas de cuenta corriente, cargá nuevos recortes o registra entregas de dinero.</p>        </div>        <button onclick="irClientes()" class="bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2">          <i class="fas fa-address-book"></i> Ir al Listado de Clientes y Cajas        </button>      </div>      <div class="card-dark p-6 rounded-2xl shadow-xl">        <h3 class="font-bold text-white text-base mb-2"><i class="fas fa-lightbulb text-amber-400 mr-2"></i> Estado de Conexión</h3>        <p class="text-xs text-stone-300 mt-2">Sincronización automática activa con Google Sheets para PC y celular con numeración universal de órdenes.</p>      </div>    </div></main>  <!-- VISTA 2: CLIENTES Y CAJA --><main id="seccionClientes" class="max-w-6xl mx-auto px-4 mt-6 hidden grid-cols-1 md:grid-cols-12 gap-6">    <section class="md:col-span-4 space-y-4">      <div class="card-dark p-4 rounded-xl shadow-md border-t-4 border-t-amber-500">        <h3 class="font-bold text-stone-200 text-sm mb-3 flex items-center justify-between">          <span><i class="fas fa-cash-register text-amber-400 mr-1.5"></i> Resumen de Caja</span>        </h3>        <div class="flex gap-1 bg-stone-900/60 p-1 rounded-lg mb-3">          <button id="btnFiltroHoy" onclick="cambiarFiltroCaja('HOY')" class="flex-1 text-xs py-1.5 rounded-md font-bold transition bg-amber-600 text-white">Hoy</button>          <button id="btnFiltroMes" onclick="cambiarFiltroCaja('MES')" class="flex-1 text-xs py-1.5 rounded-md font-medium text-stone-400 hover:text-white transition">Este Mes</button>        </div>        <div class="space-y-2">          <div class="card-inner p-2.5 rounded-lg border border-stone-800 flex justify-between items-center">            <span class="text-xs text-stone-300"><i class="fas fa-arrow-down text-emerald-400 mr-1"></i> Dinero Ingresado:</span>            <span id="cajaIngresos" class="text-sm font-bold text-emerald-400">$0,00</span>          </div>          <div class="card-inner p-2.5 rounded-lg border border-stone-800 flex justify-between items-center">            <span class="text-xs text-stone-300"><i class="fas fa-shopping-cart text-rose-400 mr-1"></i> Total Ventas / Deudas:</span>            <span id="cajaVentas" class="text-sm font-bold text-rose-400">$0,00</span>          </div>        </div>      </div>      <div class="card-dark p-4 rounded-xl shadow-md">        <div class="flex justify-between items-center mb-3">          <h2 class="font-bold text-stone-200 text-sm"><i class="fas fa-search text-stone-400 mr-1"></i> Buscar Cliente</h2>          <button onclick="abrirModalCliente()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition">            + Nuevo Cliente          </button>        </div>        <input type="text" id="inputBuscar" oninput="filtrarClientes()" placeholder="Escribí un nombre..." class="w-full px-3 py-2 rounded-lg text-sm mb-3">        <div id="listaClientes" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1"></div>      </div>    </section>    <section class="md:col-span-8 space-y-6">      <div id="vistaVacia" class="card-dark p-12 rounded-xl text-center text-stone-400">        <i class="fas fa-user-circle text-6xl mb-3 text-stone-500"></i>        <h3 class="text-lg font-medium text-stone-200">No hay ningún cliente seleccionado</h3>        <p class="text-sm mt-1">Buscá un cliente a la izquierda o creá uno nuevo para ver su saldo y movimientos.</p>      </div>      <div id="vistaCliente" class="hidden space-y-6">        <div class="card-dark p-5 rounded-xl shadow-md relative">          <div class="flex flex-wrap justify-between items-start gap-4 mb-4">            <div>              <span class="text-xs font-semibold text-amber-400 uppercase tracking-wider">Ficha de Cliente</span>              <h2 id="clienteNombre" class="text-2xl font-bold text-white mt-0.5"></h2>              <p id="clienteTel" class="text-sm text-stone-300 mt-1"><i class="fas fa-phone mr-1"></i> <span></span></p>              <p id="clienteNotas" class="text-xs text-stone-400 mt-1 italic"></p>            </div>            <div class="card-inner p-4 rounded-xl border border-stone-700 text-right min-w-[200px]">              <span class="text-xs text-stone-400 block font-medium">SALDO PENDIENTE TOTAL</span>              <span id="clienteSaldo" class="text-3xl font-extrabold block my-0.5"></span>              <span id="estadoBadge" class="text-[10px] px-2 py-0.5 rounded font-bold inline-block"></span>            </div>          </div>          <div class="flex flex-wrap gap-2 pt-3 border-t border-stone-700/60">            <button onclick="abrirModalMovimiento('DEUDA')" class="bg-rose-700 hover:bg-rose-800 text-white text-sm px-4 py-2 rounded-lg font-medium transition flex items-center gap-1.5">              <i class="fas fa-plus-circle"></i> + Agregar Compra / Corte (Debe)            </button>            <button onclick="abrirModalMovimiento('PAGO')" class="bg-emerald-700 hover:bg-emerald-800 text-white text-sm px-4 py-2 rounded-lg font-medium transition flex items-center gap-1.5">              <i class="fas fa-hand-holding-usd"></i> + Registrar Entrega / Pago (Haber)            </button>          </div>        </div>        <div class="card-dark p-5 rounded-xl shadow-md">          <h3 class="font-bold text-stone-200 mb-4 flex items-center gap-2">            <i class="fas fa-history text-stone-400"></i> Historial de Movimientos          </h3>          <div class="overflow-x-auto">            <table class="w-full text-left text-sm">              <thead class="text-xs uppercase bg-stone-900/50 text-stone-400 border-b border-stone-700">                <tr>                  <th class="py-2.5 px-3">Fecha</th>                  <th class="py-2.5 px-3">Tipo / Detalle / Orden</th>                  <th class="py-2.5 px-3 text-right">Monto</th>                  <th class="py-2.5 px-3 text-center">Acción</th>                </tr>              </thead>              <tbody id="tablaMovimientos" class="divide-y divide-stone-700/50"></tbody>            </table>          </div>        </div>      </div>    </section></main>  <!-- MODAL: CLIENTE --><div id="modalCliente" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">    <div class="card-dark p-6 rounded-xl max-w-md w-full shadow-2xl">      <h3 class="text-lg font-bold text-stone-100 mb-4" id="modalClienteTitulo">Nuevo Cliente</h3>      <form id="formCliente" onsubmit="guardarCliente(event)" class="space-y-4">        <input type="hidden" id="clienteId">        <div>          <label class="block text-xs font-medium text-stone-300 mb-1">Nombre Completo *</label>          <input type="text" id="inputNombre" required placeholder="Ej: Juan Pérez" class="w-full px-3 py-2 rounded-lg text-sm">        </div>        <div>          <label class="block text-xs font-medium text-stone-300 mb-1">Teléfono (opcional)</label>          <input type="text" id="inputTelefono" placeholder="Ej: 11 1234 5678" class="w-full px-3 py-2 rounded-lg text-sm">        </div>        <div>          <label class="block text-xs font-medium text-stone-300 mb-1">Notas / Observaciones (opcional)</label>          <textarea id="inputNotas" rows="2" placeholder="Ej: Medidas habituales" class="w-full px-3 py-2 rounded-lg text-sm"></textarea>        </div>        <div class="flex justify-end gap-2 pt-2">          <button type="button" onclick="cerrarModales()" class="px-4 py-2 text-xs text-stone-300 hover:text-white">Cancelar</button>          <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold">Guardar Cliente</button>        </div>      </form>    </div>  </div>  <!-- MODAL: MOVIMIENTO (DENTRO DE FICHA DE CLIENTE) --><div id="modalMovimiento" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">    <div class="card-dark p-6 rounded-xl max-w-md w-full shadow-2xl">      <h3 class="text-lg font-bold text-stone-100 mb-4" id="modalMovimientoTitulo">Registrar Movimiento</h3>      <form id="formMovimiento" onsubmit="guardarMovimiento(event)" class="space-y-4">        <input type="hidden" id="movimientoTipo">        <div>          <label class="block text-xs font-medium text-stone-300 mb-1">Fecha * (Editable)</label>          <input type="date" id="inputFecha" required class="w-full px-3 py-2 rounded-lg text-sm">        </div>        <div>          <label class="block text-xs font-medium text-stone-300 mb-1">Monto ($) *</label>          <input type="number" step="0.01" min="0" id="inputMonto" required placeholder="0.00" class="w-full px-3 py-2 rounded-lg text-sm">        </div>        <div>          <label class="block text-xs font-medium text-stone-300 mb-1">Detalle / Concepto (opcional)</label>          <input type="text" id="inputDetalle" placeholder="Ej: Recorte chapa 2mm a medida" class="w-full px-3 py-2 rounded-lg text-sm">        </div>        <div id="seccionOpcionesCompra" class="space-y-3 pt-2 border-t border-stone-800">          <div>            <label class="block text-xs font-medium text-stone-300 mb-1">Método de Pago (opcional)</label>            <select id="inputMetodoPago" class="w-full px-3 py-2 rounded-lg text-sm">              <option value="">Seleccionar método...</option>              <option value="Efectivo">Efectivo</option>              <option value="Transferencia">Transferencia</option>              <option value="Mercado Pago">Mercado Pago</option>              <option value="Otro">Otro</option>            </select>          </div>          <div class="flex items-center gap-2 bg-stone-900/60 p-2.5 rounded-lg border border-stone-800">            <input type="checkbox" id="checkPagadoActo" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500">            <label for="checkPagadoActo" class="text-xs font-medium text-stone-200 cursor-pointer">¿El cliente ya pagó esta compra en el acto?</label>          </div>        </div>        <div class="flex justify-end gap-2 pt-2">          <button type="button" onclick="cerrarModales()" class="px-4 py-2 text-xs text-stone-300 hover:text-white">Cancelar</button>          <button type="submit" id="btnGuardarMovimiento" class="px-4 py-2 rounded-lg text-xs font-bold text-white">Guardar</button>        </div>      </form>    </div></div>  <!-- MODAL: AGREGAR COMPRA GENERAL (DESDE EL ENCABEZADO) CON VENTA AL PASO Y CREAR CLIENTE --><div id="modalCompraGeneral" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">    <div class="card-dark p-6 rounded-xl max-w-md w-full shadow-2xl">      <h3 class="text-lg font-bold text-stone-100 mb-4"><i class="fas fa-plus-circle text-rose-500 mr-2"></i> Agregar Compra / Venta Rápida</h3>      <form id="formCompraGeneral" onsubmit="guardarCompraGeneral(event)" class="space-y-4">        <div>          <label class="block text-xs font-medium text-stone-300 mb-1">Seleccionar Cliente *</label>          <select id="selectClienteGeneral" onchange="verificarOpcionCliente(this.value)" required class="w-full px-3 py-2 rounded-lg text-sm">            <option value="">Cargando clientes...</option>          </select>        </div>        <div>          <label class="block text-xs font-medium text-stone-300 mb-1">Fecha * (Editable)</label>          <input type="date" id="inputFechaGen" required class="w-full px-3 py-2 rounded-lg text-sm">        </div>        <div>          <label class="block text-xs font-medium text-stone-300 mb-1">Monto ($) *</label>          <input type="number" step="0.01" min="0" id="inputMontoGen" required placeholder="0.00" class="w-full px-3 py-2 rounded-lg text-sm">        </div>        <div>          <label class="block text-xs font-medium text-stone-300 mb-1">Detalle / Concepto (opcional)</label>          <input type="text" id="inputDetalleGen" placeholder="Ej: Recorte chapa a medida" class="w-full px-3 py-2 rounded-lg text-sm">        </div>        <div class="space-y-3 pt-2 border-t border-stone-800">          <div>            <label class="block text-xs font-medium text-stone-300 mb-1">Método de Pago (opcional)</label>            <select id="inputMetodoPagoGen" class="w-full px-3 py-2 rounded-lg text-sm">              <option value="">Seleccionar método...</option>              <option value="Efectivo">Efectivo</option>              <option value="Transferencia">Transferencia</option>              <option value="Mercado Pago">Mercado Pago</option>              <option value="Otro">Otro</option>            </select>          </div>          <div class="flex items-center gap-2 bg-stone-900/60 p-2.5 rounded-lg border border-stone-800">            <input type="checkbox" id="checkPagadoActoGen" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500">            <label for="checkPagadoActoGen" class="text-xs font-medium text-stone-200 cursor-pointer">¿El cliente ya pagó esta compra en el acto?</label>          </div>        </div>        <div class="flex justify-end gap-2 pt-2">          <button type="button" onclick="cerrarModales()" class="px-4 py-2 text-xs text-stone-300 hover:text-white">Cancelar</button>          <button type="submit" class="btn-violeta px-4 py-2 rounded-lg text-xs font-bold text-white">Guardar Compra</button>        </div>      </form>    </div>  </div><script>    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbww5MwEoQ_zlEq8tDhKHZvtKOeg3f-vDGDqa_HYcY9NE7SF4S3F7QebWcxRYa44Ly_P/exec';    let clientes = [];    let clienteSeleccionadoId = null;    let filtroCajaModo = 'HOY';    async function inicializarDatos() {      const icono = document.getElementById('iconoSync');      const texto = document.getElementById('textoSync');      if(icono) icono.classList.remove('hidden');      if(texto) texto.innerText = 'Cargando...';      try {        const respuesta = await fetch(APPS_SCRIPT_URL);        const resultado = await respuesta.json();                if (resultado.status === 'success' && resultado.registros) {          clientes = agruparRegistrosEnClientes(resultado.registros);          if(texto) texto.innerText = 'Sincronizado';        }      } catch (e) {        clientes = JSON.parse(localStorage.getItem('metalcof_clientes')) || [];        if(texto) texto.innerText = 'Modo Offline';      } finally {        if(icono) icono.classList.add('hidden');        actualizarBalanceGlobal();        calcularCajaDiaria();        if(!document.getElementById('seccionClientes').classList.contains('hidden')) {          renderizarClientes();        }      }    }    function agruparRegistrosEnClientes(registros) {      let mapaClientes = {};            registros.forEach(r => {        if (!r.cliente) return;        if (!mapaClientes[r.cliente]) {          mapaClientes[r.cliente] = {            id: 'cli_' + encodeURIComponent(r.cliente),            nombre: r.cliente,            telefono: r.telefono || '',            notas: r.notas || '',            movimientos: []          };        }                if (r.fecha && r.tipo && r.monto !== '') {          mapaClientes[r.cliente].movimientos.push({            id: r.idMov || ('mov_' + Math.random().toString(36).substr(2, 9)),            tipo: r.tipo,            fecha: r.fecha,            detalle: r.detalle,            metodoPago: r.metodoPago || '',            monto: Number(r.monto)          });        }      });      return Object.values(mapaClientes);    }    function obtenerTodasLasVentasOrdenadas() {      let todasLasVentas = [];      clientes.forEach(c => {        if (c.movimientos) {          c.movimientos.forEach(m => {            if (m.tipo === 'DEUDA') {              todasLasVentas.push({ ...m, clienteNombre: c.nombre });            }          });        }      });      todasLasVentas.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));      return todasLasVentas;    }    function formatearMoneda(monto) {      return '$' + Number(monto || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });    }    function irInicio() {      document.getElementById('seccionInicio').classList.remove('hidden');      document.getElementById('seccionClientes').classList.add('hidden');      document.getElementById('seccionClientes').classList.remove('grid');      actualizarBalanceGlobal();    }    function irClientes() {      document.getElementById('seccionInicio').classList.add('hidden');      document.getElementById('seccionClientes').classList.remove('hidden');      document.getElementById('seccionClientes').classList.add('grid');      renderizarClientes();    }    function actualizarBalanceGlobal() {      let deudaTotal = 0;      let ingresosMes = 0;      let ventasMes = 0;      let cantVentasMes = 0;            const hoy = new Date().toISOString().split('T')[0];      const mesActual = hoy.substring(0, 7);      clientes.forEach(c => {        deudaTotal += calcularSaldo(c.id);        if (c.movimientos) {          c.movimientos.forEach(m => {            if (m.fecha && m.fecha.startsWith(mesActual)) {              if (m.tipo === 'PAGO') ingresosMes += m.monto;              if (m.tipo === 'DEUDA') {                ventasMes += m.monto;                cantVentasMes++;              }            }          });        }      });      document.getElementById('globalDeudaTotal').innerText = formatearMoneda(deudaTotal);      document.getElementById('globalIngresosMes').innerText = formatearMoneda(ingresosMes);      document.getElementById('globalVentasMes').innerText = formatearMoneda(ventasMes);      document.getElementById('globalCantVentasMes').innerText = cantVentasMes;    }    function guardarEnStorage() {      localStorage.setItem('metalcof_clientes', JSON.stringify(clientes));      sincronizarConGoogleSheets();      calcularCajaDiaria();      actualizarBalanceGlobal();    }    async function sincronizarConGoogleSheets() {      if (!APPS_SCRIPT_URL) return;      const icono = document.getElementById('iconoSync');      const texto = document.getElementById('textoSync');      if(icono) icono.classList.remove('hidden');      if(texto) texto.innerText = 'Sincronizando...';      let registros = [];      clientes.forEach(c => {        if (!c.movimientos || c.movimientos.length === 0) {          registros.push({ cliente: c.nombre, telefono: c.telefono || '', notas: c.notas || '', fecha: '', tipo: '', detalle: '', metodoPago: '', monto: '', idMov: '' });        } else {          c.movimientos.forEach(m => {            registros.push({               cliente: c.nombre,               telefono: c.telefono || '',               notas: c.notas || '',               fecha: m.fecha,               tipo: m.tipo,               detalle: m.detalle || '',               metodoPago: m.metodoPago || '',               monto: m.monto,              idMov: m.id || ''            });          });        }      });      try {        await fetch(APPS_SCRIPT_URL, {          method: 'POST',          mode: 'no-cors',          headers: { 'Content-Type': 'application/json' },          body: JSON.stringify({ registros: registros })        });        if(texto) texto.innerText = 'Sincronizado';      } catch (e) {        if(texto) texto.innerText = 'Error Sync';      } finally {        if(icono) icono.classList.add('hidden');      }    }    function cambiarFiltroCaja(modo) {      filtroCajaModo = modo;      const btnHoy = document.getElementById('btnFiltroHoy');      const btnMes = document.getElementById('btnFiltroMes');      if (modo === 'HOY') {        btnHoy.className = "flex-1 text-xs py-1.5 rounded-md font-bold transition bg-amber-600 text-white";        btnMes.className = "flex-1 text-xs py-1.5 rounded-md font-medium text-stone-400 hover:text-white transition";      } else {        btnMes.className = "flex-1 text-xs py-1.5 rounded-md font-bold transition bg-amber-600 text-white";        btnHoy.className = "flex-1 text-xs py-1.5 rounded-md font-medium text-stone-400 hover:text-white transition";      }      calcularCajaDiaria();    }    function calcularCajaDiaria() {      const hoy = new Date().toISOString().split('T')[0];      const mesActual = hoy.substring(0, 7);      let totalIngresos = 0;      let totalVentas = 0;      clientes.forEach(c => {        if (c.movimientos) {          c.movimientos.forEach(m => {            const coincide = filtroCajaModo === 'HOY' ? m.fecha === hoy : m.fecha.startsWith(mesActual);            if (coincide) {              if (m.tipo === 'PAGO') totalIngresos += m.monto;              if (m.tipo === 'DEUDA') totalVentas += m.monto;            }          });        }      });      document.getElementById('cajaIngresos').innerText = formatearMoneda(totalIngresos);      document.getElementById('cajaVentas').innerText = formatearMoneda(totalVentas);    }    function renderizarClientes(filtro = '') {      const contenedor = document.getElementById('listaClientes');      if(!contenedor) return;      contenedor.innerHTML = '';      const filtrados = clientes.filter(c => c.nombre.toLowerCase().includes(filtro.toLowerCase()));      if (filtrados.length === 0) {        contenedor.innerHTML = `<div class="p-4 text-center text-xs text-stone-400 bg-stone-900/40 rounded-lg border border-dashed border-stone-700">${filtro ? 'No se encontró ningún cliente.' : 'No hay clientes registrados.'}</div>`;        return;      }      filtrados.forEach(c => {        const saldo = calcularSaldo(c.id);        const esSeleccionado = c.id === clienteSeleccionadoId;        const div = document.createElement('div');        div.onclick = () => seleccionarCliente(c.id);        div.className = `p-3 rounded-lg cursor-pointer transition flex justify-between items-center ${esSeleccionado ? 'bg-amber-900/40 border border-amber-600/60' : 'bg-stone-800/60 hover:bg-stone-800 border border-transparent'}`;                div.innerHTML = `          <div>            <p class="font-bold text-sm text-stone-100">${escapeHtml(c.nombre)}</p>            <p class="text-xs text-stone-400">${c.telefono ? '<i class="fas fa-phone mr-1"></i>' + escapeHtml(c.telefono) : 'Sin teléfono'}</p>          </div>          <div class="text-right">            <span class="text-xs font-bold ${saldo > 0 ? 'text-rose-400' : 'text-emerald-400'}">${formatearMoneda(saldo)}</span>          </div>        `;        contenedor.appendChild(div);      });    }    function calcularSaldo(clienteId) {      const cliente = clientes.find(c => c.id === clienteId);      if (!cliente || !cliente.movimientos) return 0;      return cliente.movimientos.reduce((acc, mov) => mov.tipo === 'DEUDA' ? acc + mov.monto : acc - mov.monto, 0);    }    function seleccionarCliente(id) {      clienteSeleccionadoId = id;      renderizarClientes(document.getElementById('inputBuscar').value);      const cliente = clientes.find(c => c.id === id);      if (!cliente) return;      document.getElementById('vistaVacia').classList.add('hidden');      document.getElementById('vistaCliente').classList.remove('hidden');      document.getElementById('clienteNombre').innerText = cliente.nombre;            const elTel = document.getElementById('clienteTel');      if (cliente.telefono) {        elTel.querySelector('span').innerText = cliente.telefono;        elTel.classList.remove('hidden');      } else {        elTel.classList.add('hidden');      }      document.getElementById('clienteNotas').innerText = cliente.notas ? `"${cliente.notas}"` : '';      const saldo = calcularSaldo(id);      const elSaldo = document.getElementById('clienteSaldo');      const elBadge = document.getElementById('estadoBadge');      elSaldo.innerText = formatearMoneda(saldo);      if (saldo > 0) {        elSaldo.className = "text-3xl font-extrabold block my-0.5 text-rose-500";        elBadge.innerText = "DEBE DINERO";        elBadge.className = "text-[10px] px-2 py-0.5 rounded font-bold inline-block bg-rose-950 text-rose-300 border border-rose-800";      } else if (saldo === 0) {        elSaldo.className = "text-3xl font-extrabold block my-0.5 text-emerald-400";        elBadge.innerText = "AL DÍA";        elBadge.className = "text-[10px] px-2 py-0.5 rounded font-bold inline-block bg-emerald-950 text-emerald-300 border border-emerald-800";      } else {        elSaldo.className = "text-3xl font-extrabold block my-0.5 text-sky-400";        elBadge.innerText = "SALDO A FAVOR";        elBadge.className = "text-[10px] px-2 py-0.5 rounded font-bold inline-block bg-sky-950 text-sky-300 border border-sky-800";      }      renderizarMovimientos(cliente);    }    function renderizarMovimientos(cliente) {      const tbody = document.getElementById('tablaMovimientos');      tbody.innerHTML = '';      if (!cliente.movimientos || cliente.movimientos.length === 0) {        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-stone-500 text-xs">Sin movimientos registrados aún.</td></tr>`;        return;      }      const todasVentas = obtenerTodasLasVentasOrdenadas();      const ordenados = [...cliente.movimientos].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));            ordenados.forEach(mov => {        const tr = document.createElement('tr');        tr.className = "hover:bg-stone-800/40";        const esDeuda = mov.tipo === 'DEUDA';                let etiquetaOrden = '';        if (esDeuda) {          const indexVenta = todasVentas.findIndex(v => v.id === mov.id);          if (indexVenta !== -1) {            etiquetaOrden = `<span class="text-xs text-amber-400 font-bold mr-1">[Ord #${indexVenta + 1}]</span>`;          }        } else if (mov.id && mov.id.endsWith('_pago')) {          const idDeudaOriginal = mov.id.replace('_pago', '');          const indexVenta = todasVentas.findIndex(v => v.id === idDeudaOriginal);          if (indexVenta !== -1) {            etiquetaOrden = `<span class="text-xs text-amber-400 font-bold mr-1">[Ord #${indexVenta + 1}]</span>`;          }        }        let detalleTexto = `${etiquetaOrden}${escapeHtml(mov.detalle || '-')}`;        if (mov.metodoPago) {          detalleTexto += ` <span class="text-[10px] bg-stone-700 px-1.5 py-0.5 rounded text-stone-300 ml-1"><i class="fas fa-wallet mr-0.5"></i>${escapeHtml(mov.metodoPago)}</span>`;        }        tr.innerHTML = `          <td class="py-3 px-3 text-xs text-stone-300 whitespace-nowrap">${mov.fecha}</td>          <td class="py-3 px-3">            <span class="text-xs font-semibold px-2 py-0.5 rounded ${esDeuda ? 'bg-rose-950 text-rose-300' : 'bg-emerald-950 text-emerald-300'}">${esDeuda ? 'Compra / Corte' : 'Entrega / Pago'}</span>            <p class="text-xs text-stone-300 mt-0.5">${detalleTexto}</p>          </td>          <td class="py-3 px-3 text-right font-bold text-sm ${esDeuda ? 'text-rose-400' : 'text-emerald-400'}">${esDeuda ? '+' : '-'}${formatearMoneda(mov.monto)}</td>          <td class="py-3 px-3 text-center">            <button onclick="eliminarMovimiento('${mov.id}')" class="text-stone-500 hover:text-rose-400 text-xs px-2 py-1" title="Eliminar"><i class="fas fa-trash"></i></button>          </td>        `;        tbody.appendChild(tr);      });    }    function abrirModalCliente() {      document.getElementById('clienteId').value = '';      document.getElementById('formCliente').reset();      document.getElementById('modalClienteTitulo').innerText = 'Nuevo Cliente';      document.getElementById('modalCliente').classList.remove('hidden');      document.getElementById('modalCliente').classList.add('flex');    }    function guardarCliente(e) {      e.preventDefault();      const nombre = document.getElementById('inputNombre').value.trim();      const telefono = document.getElementById('inputTelefono').value.trim();      const notas = document.getElementById('inputNotas').value.trim();      if (!nombre) return;      const nuevoCliente = { id: 'cli_' + Date.now(), nombre, telefono, notas, movimientos: [] };      clientes.push(nuevoCliente);      guardarEnStorage();      cerrarModales();      renderizarClientes();      seleccionarCliente(nuevoCliente.id);    }    function abrirModalMovimiento(tipo) {      if (!clienteSeleccionadoId) return;      document.getElementById('formMovimiento').reset();      const hoy = new Date().toISOString().split('T')[0];      document.getElementById('inputFecha').value = hoy;      document.getElementById('movimientoTipo').value = tipo;            const titulo = document.getElementById('modalMovimientoTitulo');      const btn = document.getElementById('btnGuardarMovimiento');      const seccionOpcionesCompra = document.getElementById('seccionOpcionesCompra');      if (tipo === 'DEUDA') {        titulo.innerText = 'Registrar Compra / Corte (Debe)';        btn.className = 'bg-rose-700 hover:bg-rose-800 px-4 py-2 rounded-lg text-xs font-bold text-white';        seccionOpcionesCompra.classList.remove('hidden');      } else {        titulo.innerText = 'Registrar Entrega / Pago (Haber)';        btn.className = 'bg-emerald-700 hover:bg-emerald-800 px-4 py-2 rounded-lg text-xs font-bold text-white';        seccionOpcionesCompra.classList.add('hidden');      }      document.getElementById('modalMovimiento').classList.remove('hidden');      document.getElementById('modalMovimiento').classList.add('flex');    }    function guardarMovimiento(e) {      e.preventDefault();      const cliente = clientes.find(c => c.id === clienteSeleccionadoId);      if (!cliente) return;      const tipo = document.getElementById('movimientoTipo').value;      const fecha = document.getElementById('inputFecha').value;      const monto = parseFloat(document.getElementById('inputMonto').value);      const detalle = document.getElementById('inputDetalle').value.trim();      const metodoPago = document.getElementById('inputMetodoPago').value;      const pagadoEnActo = document.getElementById('checkPagadoActo').checked;      if (!fecha || isNaN(monto) || monto <= 0) return;      const idUnicoBase = 'mov_' + Date.now();            if (tipo === 'DEUDA') {        cliente.movimientos.push({           id: idUnicoBase,           tipo: 'DEUDA',           fecha,           monto,           detalle,          metodoPago         });        if (pagadoEnActo) {          cliente.movimientos.push({            id: idUnicoBase + '_pago',            tipo: 'PAGO',            fecha,            monto,            detalle: 'Pago en el acto' + (detalle ? ` (${detalle})` : ''),            metodoPago          });        }      } else {        cliente.movimientos.push({          id: idUnicoBase,          tipo: 'PAGO',          fecha,          monto,          detalle: detalle || 'Entrega / Pago a cuenta',          metodoPago: ''        });      }      guardarEnStorage();      cerrarModales();      seleccionarCliente(clienteSeleccionadoId);    }    function abrirModalCompraGeneral() {      actualizarSelectClientesGeneral();      document.getElementById('formCompraGeneral').reset();      const hoy = new Date().toISOString().split('T')[0];      document.getElementById('inputFechaGen').value = hoy;      document.getElementById('modalCompraGeneral').classList.remove('hidden');      document.getElementById('modalCompraGeneral').classList.add('flex');    }    function actualizarSelectClientesGeneral() {      const select = document.getElementById('selectClienteGeneral');      select.innerHTML = '';            const optPaso = document.createElement('option');      optPaso.value = 'VENTA_AL_PASO';      optPaso.innerText = '👤 [ Venta al Paso / Mostrador ]';      select.appendChild(optPaso);      const optSep = document.createElement('option');      optSep.disabled = true;      optSep.innerText = '-----------------------------------';      select.appendChild(optSep);      clientes.sort((a,b) => a.nombre.localeCompare(b.nombre)).forEach(c => {        const opt = document.createElement('option');        opt.value = c.id;        opt.innerText = c.nombre;        select.appendChild(opt);      });      const optNuevo = document.createElement('option');      optNuevo.value = 'CREAR_NUEVO';      optNuevo.innerText = '+ [ Crear nuevo cliente... ]';      select.appendChild(optNuevo);    }    function verificarOpcionCliente(valor) {      if (valor === 'CREAR_NUEVO') {        const nombreNuevo = prompt('Ingrese el nombre y apellido del nuevo cliente:');        if (nombreNuevo && nombreNuevo.trim() !== '') {          const nuevoCliente = { id: 'cli_' + Date.now(), nombre: nombreNuevo.trim(), telefono: '', notas: '', movimientos: [] };          clientes.push(nuevoCliente);          guardarEnStorage();          actualizarSelectClientesGeneral();          document.getElementById('selectClienteGeneral').value = nuevoCliente.id;        } else {          document.getElementById('selectClienteGeneral').value = '';        }      }    }    function guardarCompraGeneral(e) {      e.preventDefault();      const clienteId = document.getElementById('selectClienteGeneral').value;      if (!clienteId) return;      let cliente;      if (clienteId === 'VENTA_AL_PASO') {        let clientePaso = clientes.find(c => c.nombre === 'Venta al Paso');        if (!clientePaso) {          clientePaso = { id: 'cli_mostrador', nombre: 'Venta al Paso', telefono: '', notas: 'Clientes mostrador / anónimos', movimientos: [] };          clientes.push(clientePaso);        }        cliente = clientePaso;      } else {        cliente = clientes.find(c => c.id === clienteId);      }      if (!cliente) return;      const fecha = document.getElementById('inputFechaGen').value;      const monto = parseFloat(document.getElementById('inputMontoGen').value);      const detalle = document.getElementById('inputDetalleGen').value.trim();      const metodoPago = document.getElementById('inputMetodoPagoGen').value;      let pagadoEnActo = document.getElementById('checkPagadoActoGen').checked;      if (clienteId === 'VENTA_AL_PASO') {        pagadoEnActo = true;      }      if (!fecha || isNaN(monto) || monto <= 0) return;      const idUnicoBase = 'mov_' + Date.now();      cliente.movimientos.push({        id: idUnicoBase,        tipo: 'DEUDA',        fecha,        monto,        detalle: (clienteId === 'VENTA_AL_PASO' ? 'Venta al paso - ' : '') + (detalle || 'Recorte estándar'),        metodoPago: metodoPago || 'Efectivo'      });      if (pagadoEnActo) {        cliente.movimientos.push({          id: idUnicoBase + '_pago',          tipo: 'PAGO',          fecha,          monto,          detalle: 'Pago en el acto',          metodoPago: metodoPago || 'Efectivo'        });      }      guardarEnStorage();      cerrarModales();            if (!document.getElementById('seccionClientes').classList.contains('hidden')) {        seleccionarCliente(cliente.id);      }    }    function eliminarMovimiento(movId) {      const cliente = clientes.find(c => c.id === clienteSeleccionadoId);      if (!cliente) return;      if (confirm('¿Estás segura de eliminar este movimiento?')) {        let baseId = movId.replace('_pago', '');        cliente.movimientos = cliente.movimientos.filter(m => m.id !== baseId && m.id !== (baseId + '_pago'));        guardarEnStorage();        seleccionarCliente(clienteSeleccionadoId);      }    }    function cerrarModales() {      document.querySelectorAll('#modalCliente, #modalMovimiento, #modalCompraGeneral').forEach(m => {        m.classList.add('hidden');        m.classList.remove('flex');      });    }    function filtrarClientes() {      renderizarClientes(document.getElementById('inputBuscar').value);    }    function exportarCSV() {      if (clientes.length === 0) {        alert('No hay clientes ni datos para exportar.');        return;      }      let csv = 'Cliente;Telefono;Notas;Fecha Movimiento;Tipo;Detalle;MetodoPago;Monto;IDMov\n';      clientes.forEach(c => {        if (!c.movimientos || c.movimientos.length === 0) {          csv += `"${c.nombre}";"${c.telefono || ''}";"${c.notas || ''}";"";"";"";"";"";""\n`;        } else {          c.movimientos.forEach(m => {            csv += `"${c.nombre}";"${c.telefono || ''}";"${c.notas || ''}";"${m.fecha}";"${m.tipo}";"${m.detalle || ''}";"${m.metodoPago || ''}";"${m.monto}";"${m.id || ''}"\n`;          });        }      });      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });      const link = document.createElement('a');      link.href = URL.createObjectURL(blob);      link.download = `METALCOF_Respaldo_${new Date().toISOString().split('T')[0]}.csv`;      link.click();    }    function escapeHtml(text) {      if (!text) return '';      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");    }    // Inicializar app leyendo desde Sheets    inicializarDatos();</body></html># Chuleta para la entrevista – Asistente Comercial en Argenpymes🏢 Sobre la empresaArgenpymes es una SGR (Sociedad de Garantía Recíproca), nacida bajo el respaldo de Allaria S.A., un referente importante del Mercado de Capitales argentino.Su función: ayudar a las PyMEs a acceder a mejor financiamiento, dándoles garantías (avales) sobre cheques, créditos y otras operaciones.Es una SGR federal: trabaja con pymes de cualquier parte del país y de cualquier rubro.Dato para lucirte: hace poco fue parte de una fusión de SGRs autorizada por el Gobierno para potenciar el crédito pyme, consolidando un fondo de riesgo de más de $151.000 millones — muestra que la empresa está creciendo.💳 Conceptos clave (lo de los cheques, explicado simple)Término	Qué significaCheque de pago diferido (CPD)	Cheque que se cobra en una fecha futura, no al momento (ej: "a 90 días").Descontar un cheque	Vender el cheque antes de su fecha de cobro para tener la plata ya, a cambio de resignar una parte (interés).Cheque avalado	Un cheque al que la SGR le "pone la firma" garantizando que se paga. Si el emisor no paga, paga la SGR. Esto hace que se pueda vender a mejor tasa.Socio partícipe	La pyme que recibe el aval de la SGR (tiene que estar asociada para pedirlo).Socio protector	Quien aporta capital al Fondo de Riesgo de la SGR (la "caja" que respalda los avales).Fondo de Riesgo	El dinero que respalda los avales que da la SGR. Si un cheque avalado no se cobra, se paga desde ahí.Certificado PyME	Documento que se saca en AFIP y que las empresas necesitan para operar y ser reconocidas como pyme.Sistema avalado vs. patrocinado	Avalado = para pymes chicas/medianas (lo usa Argenpymes). Patrocinado = para empresas grandes.Frase resumen para tener a mano:"Argenpymes ayuda a las pymes a financiarse avalando sus cheques y garantías, para que puedan acceder a mejores condiciones que si operaran solas."📊 Excel – lo mínimo para el puestoCrear y ordenar una planilla (encabezados, columnas, filas).Ordenar datos (A-Z) y filtrar información.Fórmulas básicas: `=SUMA()`, `=PROMEDIO()`, `=CONTAR()`.Formato como tabla (para que se vea prolijo).Plus (no excluyente): `BUSCARV`.Si preguntan tu nivel de Excel:"Manejo lo básico con soltura —tablas, filtros, fórmulas simples— y lo que no sé lo aprendo rápido."🗂️ Sobre el control de documentaciónNo es conocimiento técnico, es organización y prolijidad.Ejemplo de lo que se controla: que estén completos los datos de la empresa, el Certificado PyME, y los datos del cheque u operación.Podés remarcar experiencia previa organizando archivos, carpetas o seguimientos administrativos.💬 Sobre atención a clientesNo vas a decidir si se avala un cheque (eso lo hace el área de riesgo).Tu rol: entender la consulta, explicar con claridad, y derivar al área correspondiente si hace falta.Ejemplos de consultas típicas:"¿Por qué mi cheque no fue avalado todavía?""¿Qué documentación necesito?""¿Cuánto tarda la aprobación?"
