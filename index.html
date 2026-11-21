@@ -356,11 +356,12 @@
       if(texto) texto.innerText = 'Cargando...';
 
       try {
-        const respuesta = await fetch(APPS_SCRIPT_URL);
+        const respuesta = await fetch(APPS_SCRIPT_URL, { cache: 'no-store' });
         const resultado = await respuesta.json();
         
-        if (resultado.status === 'success' && resultado.registros) {
+        if (resultado.status === 'success' && Array.isArray(resultado.registros)) {
           clientes = agruparRegistrosEnClientes(resultado.registros);
+          localStorage.setItem('metalcof_clientes', JSON.stringify(clientes));
           if(texto) texto.innerText = 'Sincronizado';
         }
       } catch (e) {
@@ -371,7 +372,7 @@
         actualizarBalanceGlobal();
         calcularCajaDiaria();
         if(!document.getElementById('seccionClientes').classList.contains('hidden')) {
-          renderizarClientes();
+          renderizarClientes(document.getElementById('inputBuscar').value);
         }
       }
     }
@@ -436,7 +437,7 @@
       document.getElementById('seccionInicio').classList.add('hidden');
       document.getElementById('seccionClientes').classList.remove('hidden');
       document.getElementById('seccionClientes').classList.add('grid');
-      renderizarClientes();
+      renderizarClientes(document.getElementById('inputBuscar').value);
     }
 
     function actualizarBalanceGlobal() {
@@ -706,7 +707,7 @@
       clientes.push(nuevoCliente);
       guardarEnStorage();
       cerrarModales();
-      renderizarClientes();
+      renderizarClientes(document.getElementById('inputBuscar').value);
       seleccionarCliente(nuevoCliente.id);
     }
 
